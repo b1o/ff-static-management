@@ -15,7 +15,7 @@ export const authSessionCookie = t.Cookie(
 	}
 );
 
-export const oatuhStateCookie = t.Cookie(
+export const oauthStateCookie = t.Cookie(
 	{
 		oauth_state: t.Optional(t.String()),
 	},

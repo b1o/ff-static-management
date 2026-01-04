@@ -1,7 +1,7 @@
 import Elysia from "elysia";
 import { requireAuth } from "./auth.middleware";
 import { AuthService } from "./auth.service";
-import { authCookies, authSessionCookie, oatuhStateCookie } from "./auth.model";
+import { authCookies, authSessionCookie, oauthStateCookie } from "./auth.model";
 
 const DISCORD_USER_INFO_URL = "https://discord.com/api/users/@me";
 
@@ -15,7 +15,7 @@ const publicAuthRoutes = new Elysia({ prefix: "/auth" })
 			return redirect(url);
 		},
 		{
-			cookie: oatuhStateCookie,
+			cookie: oauthStateCookie,
 		}
 	)
 	.get(
