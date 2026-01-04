@@ -7,7 +7,6 @@ const app = new Elysia()
 	.use(cors())
 	.get("/health", () => ({ status: "ok", timestamp: Date.now() }))
 	.use(authRoutes)
-	.use(devRoutes)
 	.onError(({ error }) => {
 		console.error(error);
 		if (error instanceof Error) {
@@ -19,10 +18,9 @@ const app = new Elysia()
 		console.log(`Server running at ${info.protocol}://${info.hostname}:${info.port}`);
 	});
 
-// if (process.env.NODE_ENV !== "production") {
-// 	console.log("Loading dev routes...");
-// 	const { devRoutes } = await import("./core/dev");
-// 	app.use(devRoutes);
-// }
+if (process.env.NODE_ENV !== "production") {
+	console.log("Loading dev routes...");
+	app.use(devRoutes);
+}
 
 export type App = typeof app;
