@@ -2,11 +2,9 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { authRoutes } from "./core/auth";
 import { devRoutes } from "./core/dev";
+import { staticsRoutes } from "./core/static";
 
 const app = new Elysia()
-	.use(cors())
-	.get("/health", () => ({ status: "ok", timestamp: Date.now() }))
-	.use(authRoutes)
 	.onError(({ error }) => {
 		console.error(error);
 		if (error instanceof Error) {
@@ -14,6 +12,11 @@ const app = new Elysia()
 		}
 		return { error: "Unknown error occurred" };
 	})
+	.use(cors())
+	.get("/health", () => ({ status: "ok", timestamp: Date.now() }))
+	.use(authRoutes)
+	.use(staticsRoutes)
+
 	.listen(3000, (info) => {
 		console.log(`Server running at ${info.protocol}://${info.hostname}:${info.port}`);
 	});

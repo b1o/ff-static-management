@@ -92,8 +92,8 @@ const html = `
   <button onclick="logout()" class="danger">Logout</button>
 
   <h2>Test Protected Routes</h2>
-  <button onclick="testRoute('GET', '/statics')">GET /statics</button>
-  <button onclick="testRoute('POST', '/statics', { name: 'Test Static ' + Date.now() })">POST /statics (create)</button>
+  <button onclick="testRoute('GET', '/statics/my-statics')">GET /statics/my-statics</button>
+  <button onclick="testRoute('POST', '/statics/create', { name: 'Test Static ' + Date.now()})">POST /statics/create</button>
 
   <h2>Response Log</h2>
   <pre id="log">Responses will appear here...</pre>

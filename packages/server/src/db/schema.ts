@@ -76,4 +76,5 @@ export type Session = typeof sessions.$inferSelect;
 export type Static = typeof statics.$inferSelect;
 export type NewStatic = typeof statics.$inferInsert;
 export type StaticMember = typeof staticMembers.$inferSelect;
+export type NewStaticMember = Pick<StaticMember, "staticId" | "userId" | "role">;
 export type InviteCode = typeof inviteCodes.$inferSelect;
