@@ -1,21 +1,21 @@
 import { Elysia } from "elysia";
-import { lucia } from "./lucia";
+import { lucia } from "../../lib/lucia";
+import { UnauthorizedError } from "../../lib/errors";
+import { SessionService } from "../session/session.service";
 
 export const requireAuth = new Elysia({ name: "requireAuth" }).derive({ as: "scoped" }, async ({ cookie, set }) => {
 	const sessionId = cookie.auth_session?.value;
 	if (!sessionId) {
-		set.status = 401;
-		throw new Error("Unauthorized");
+		throw new UnauthorizedError();
 	}
 
-	const { session, user } = await lucia.validateSession(sessionId as string);
+	const { session, user } = await SessionService.validate(sessionId as string);
 	if (!session || !user) {
-		set.status = 401;
-		throw new Error("Unauthorized");
+		throw new UnauthorizedError();
 	}
 
 	if (session.fresh) {
-		const sessionCookie = lucia.createSessionCookie(session.id);
+		const sessionCookie = SessionService.createCookie(session.id);
 		cookie.auth_session?.set({
 			value: sessionCookie.value,
 			...sessionCookie.attributes,
@@ -30,14 +30,18 @@ export const optionalAuth = new Elysia({ name: "optionalAuth" }).derive(async ({
 	if (!sessionId) {
 		return { session: null, user: null };
 	}
-	const { session, user } = await lucia.validateSession(sessionId as string);
 
-	if (session?.fresh && cookie.auth_session) {
-		const sessionCookie = lucia.createSessionCookie(session.id);
+	const { session, user } = await SessionService.validate(sessionId as string);
+	if (!session || !user) {
+		return { session: null, user: null };
+	}
+	if (session.fresh) {
+		const sessionCookie = SessionService.createCookie(session.id);
 		cookie.auth_session?.set({
 			value: sessionCookie.value,
 			...sessionCookie.attributes,
 		});
 	}
+
 	return { session, user };
 });
