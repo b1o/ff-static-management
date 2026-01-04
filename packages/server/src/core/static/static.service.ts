@@ -28,17 +28,23 @@ export abstract class StaticService {
 	}
 
 	static async findById(id: string) {
-		return db.query.statics.findFirst({
+		return await db.query.statics.findFirst({
 			where: (s, { eq }) => eq(s.id, id),
 		});
 	}
 
 	static async findByIdWithMembers(id: string) {
-		return db.query.statics.findFirst({
+		return await db.query.statics.findFirst({
 			where: (s, { eq }) => eq(s.id, id),
 			with: {
 				members: true,
 			},
+		});
+	}
+
+	static async findMember(staticId: string, userId: string) {
+		return await db.query.staticMembers.findFirst({
+			where: (sm, { eq, and }) => and(eq(sm.staticId, staticId), eq(sm.userId, userId)),
 		});
 	}
 

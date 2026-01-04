@@ -1,8 +1,9 @@
 import Elysia, { t } from "elysia";
 import { StaticService } from "./static.service";
 import { requireAuth } from "../auth/auth.middleware";
+import { requireStaticLeader } from "./static.middleware";
 
-export const staticsRoutes = new Elysia({ prefix: "/statics" })
+const memberStaticsRoutes = new Elysia({ prefix: "/statics" })
 	.use(requireAuth)
 	.post(
 		"/create",
@@ -35,21 +36,31 @@ export const staticsRoutes = new Elysia({ prefix: "/statics" })
 				staticId: t.String(),
 			}),
 		}
+	);
+
+const leaderStaticsRoutes = new Elysia({ prefix: "/statics" })
+	.use(requireStaticLeader)
+	.get(
+		"/:staticId/members",
+		async ({ params }) => {
+			const staticData = await StaticService.findByIdWithMembers(params.staticId);
+			return { members: staticData?.members || [] };
+		},
+		{
+			params: t.Object({
+				staticId: t.String(),
+			}),
+		}
 	)
 	.post(
-		"/:staticId/members/add",
-		async ({ params, body, user, set }) => {
-			try {
-				const member = await StaticService.addMember({
-					staticId: params.staticId,
-					userId: body.userId,
-					role: body.role,
-				});
-				return { success: true, member };
-			} catch (error) {
-				set.status = 400;
-				return { error: (error as Error).message };
-			}
+		"/:staticId/members",
+		async ({ params, body, set }) => {
+			const member = await StaticService.addMember({
+				staticId: params.staticId,
+				userId: body.userId,
+				role: body.role,
+			});
+			return { success: true, member };
 		},
 		{
 			params: t.Object({
@@ -58,9 +69,34 @@ export const staticsRoutes = new Elysia({ prefix: "/statics" })
 			body: t.Object({
 				userId: t.String(),
 				role: t.Enum({
-                    leader: "leader",
-                    member: "member",
-                }),
+					leader: "leader",
+					member: "member",
+				}),
+			}),
+		}
+	)
+	.delete("/:staticId/members/:userId", async ({ params, set }) => {
+		await StaticService.removeMember(params.staticId, params.userId);
+		return { success: true };
+	})
+	.patch(
+		"/:staticId/members/:userId/role",
+		async ({ params, body, set }) => {
+			const updatedMember = await StaticService.updateMemberRole(params.staticId, params.userId, body.newRole);
+			return { success: true, updatedMember };
+		},
+		{
+			params: t.Object({
+				staticId: t.String(),
+				userId: t.String(),
+			}),
+			body: t.Object({
+				newRole: t.Enum({
+					leader: "leader",
+					member: "member",
+				}),
 			}),
 		}
 	);
+
+export const staticsRoutes = new Elysia().use(memberStaticsRoutes).use(leaderStaticsRoutes);
