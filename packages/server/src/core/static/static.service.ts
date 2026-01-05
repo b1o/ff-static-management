@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../../db";
-import { staticMembers, statics, type NewStaticMember, type StaticMember } from "../../db/schema";
+import { staticMembers, statics, type NewStaticMember } from "../../db/schema";
 import { ConfilictError, DatabaseError } from "../../lib/errors";
 
 export abstract class StaticService {
@@ -37,7 +37,11 @@ export abstract class StaticService {
 		return await db.query.statics.findFirst({
 			where: (s, { eq }) => eq(s.id, id),
 			with: {
-				members: true,
+				members: {
+					with: {
+						user: true,
+					},
+				},
 			},
 		});
 	}
@@ -94,10 +98,10 @@ export abstract class StaticService {
 		return deleteResult;
 	}
 
-	static async updateMemberRole(staticId: string, userId: string, role: "leader" | "member") {
+	static async setMemberPermissions(staticId: string, userId: string, canManage: boolean) {
 		const [updatedMember] = await db
 			.update(staticMembers)
-			.set({ role, canManage: role === "leader" })
+			.set({ canManage })
 			.where(and(eq(staticMembers.staticId, staticId), eq(staticMembers.userId, userId)))
 			.returning();
 		if (!updatedMember) {
@@ -106,15 +110,7 @@ export abstract class StaticService {
 		return updatedMember;
 	}
 
-	static async deleteStatic(staticId: string, userId: string) {
-		const staticLeader = await db.query.staticMembers.findFirst({
-			where: (sm, { eq }) => eq(sm.staticId, staticId) && eq(sm.role, "leader"),
-		});
-
-		if (!staticLeader || staticLeader.userId !== userId) {
-			throw new ConfilictError("Only the static leader can delete the static");
-		}
-
+	static async deleteStatic(staticId: string) {
 		const [deleteResult] = await db.delete(statics).where(eq(statics.id, staticId)).returning();
 		if (!deleteResult) {
 			throw new DatabaseError("Failed to delete static or static does not exist");

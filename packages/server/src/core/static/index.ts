@@ -1,9 +1,10 @@
 import Elysia, { t } from "elysia";
 import { StaticService } from "./static.service";
 import { requireAuth } from "../auth/auth.middleware";
-import { requireStaticLeader } from "./static.middleware";
+import { requireStaticLeader, requireStaticManager, requireStaticMember } from "./static.middleware";
 
-const memberStaticsRoutes = new Elysia({ prefix: "/statics" })
+// Auth-only routes (no static membership required)
+const staticsRoutes = new Elysia({ prefix: "/statics" })
 	.use(requireAuth)
 	.post(
 		"/create",
@@ -12,18 +13,21 @@ const memberStaticsRoutes = new Elysia({ prefix: "/statics" })
 			return { success: true, newStatic };
 		},
 		{
-			body: t.Object({
-				name: t.String(),
-			}),
+			body: t.Object({ name: t.String() }),
+			detail: { tags: ["Statics"], summary: "Create a New Static" },
 		}
 	)
-	.get("/my-statics", async ({ user }) => {
-		const statics = await StaticService.getUsersStatics(user.id);
-		return { statics };
-	})
+	.get(
+		"/my-statics",
+		async ({ user }) => {
+			const statics = await StaticService.getUsersStatics(user.id);
+			return { statics };
+		},
+		{ detail: { tags: ["Statics"], summary: "Get Current User's Statics" } }
+	)
 	.get(
 		"/:staticId",
-		async ({ params, user, set }) => {
+		async ({ params, set }) => {
 			const staticData = await StaticService.findByIdWithMembers(params.staticId);
 			if (!staticData) {
 				set.status = 404;
@@ -32,29 +36,37 @@ const memberStaticsRoutes = new Elysia({ prefix: "/statics" })
 			return { static: staticData };
 		},
 		{
-			params: t.Object({
-				staticId: t.String(),
-			}),
+			params: t.Object({ staticId: t.String() }),
+			detail: { tags: ["Statics"], summary: "Get Static by ID" },
 		}
 	);
 
-const leaderStaticsRoutes = new Elysia({ prefix: "/statics" })
-	.use(requireStaticLeader)
-	.get(
-		"/:staticId/members",
-		async ({ params }) => {
-			const staticData = await StaticService.findByIdWithMembers(params.staticId);
-			return { members: staticData?.members || [] };
-		},
-		{
-			params: t.Object({
-				staticId: t.String(),
-			}),
-		}
-	)
+// Leader-only routes
+const staticsLeaderRoutes = new Elysia({ prefix: "/statics/:staticId" }).use(requireStaticLeader).delete(
+	"/",
+	async ({ params }) => {
+		await StaticService.deleteStatic(params.staticId);
+		return { success: true };
+	},
+	{ detail: { tags: ["Statics"], summary: "Delete a Static" } }
+);
+
+// Member-only routes (any member can access)
+const staticMemberRoutes = new Elysia({ prefix: "/statics/:staticId" }).use(requireStaticMember).get(
+	"/members",
+	async ({ params }) => {
+		const staticData = await StaticService.findByIdWithMembers(params.staticId);
+		return { members: staticData?.members || [] };
+	},
+	{ detail: { tags: ["Members"], summary: "Get Members of a Static" } }
+);
+
+// Manager-only routes
+const staticManagerRoutes = new Elysia({ prefix: "/statics/:staticId" })
+	.use(requireStaticManager)
 	.post(
-		"/:staticId/members",
-		async ({ params, body, set }) => {
+		"/members",
+		async ({ params, body }) => {
 			const member = await StaticService.addMember({
 				staticId: params.staticId,
 				userId: body.userId,
@@ -63,40 +75,36 @@ const leaderStaticsRoutes = new Elysia({ prefix: "/statics" })
 			return { success: true, member };
 		},
 		{
-			params: t.Object({
-				staticId: t.String(),
-			}),
 			body: t.Object({
 				userId: t.String(),
-				role: t.Enum({
-					leader: "leader",
-					member: "member",
-				}),
+				role: t.Enum({ leader: "leader", member: "member" }),
 			}),
+			detail: { tags: ["Members"], summary: "Add a Member to a Static" },
 		}
 	)
-	.delete("/:staticId/members/:userId", async ({ params, set }) => {
-		await StaticService.removeMember(params.staticId, params.userId);
-		return { success: true };
-	})
+	.delete(
+		"/members/:userId",
+		async ({ params }) => {
+			await StaticService.removeMember(params.staticId, params.userId);
+			return { success: true };
+		},
+		{ detail: { tags: ["Members"], summary: "Remove a Member from a Static" } }
+	)
 	.patch(
-		"/:staticId/members/:userId/role",
-		async ({ params, body, set }) => {
-			const updatedMember = await StaticService.updateMemberRole(params.staticId, params.userId, body.newRole);
+		"/members/:userId/role",
+		async ({ params, body }) => {
+			const updatedMember = await StaticService.setMemberPermissions(params.staticId, params.userId, body.canManage);
 			return { success: true, updatedMember };
 		},
 		{
-			params: t.Object({
-				staticId: t.String(),
-				userId: t.String(),
-			}),
-			body: t.Object({
-				newRole: t.Enum({
-					leader: "leader",
-					member: "member",
-				}),
-			}),
+			params: t.Object({ staticId: t.String(), userId: t.String() }),
+			body: t.Object({ canManage: t.Boolean() }),
+			detail: { tags: ["Members"], summary: "Update a Member's Role in a Static" },
 		}
 	);
 
-export const staticsRoutes = new Elysia().use(memberStaticsRoutes).use(leaderStaticsRoutes);
+export const staticsRoutesCombined = new Elysia()
+	.use(staticsRoutes)
+	.use(staticsLeaderRoutes)
+	.use(staticMemberRoutes)
+	.use(staticManagerRoutes);

@@ -16,6 +16,7 @@ const publicAuthRoutes = new Elysia({ prefix: "/auth" })
 		},
 		{
 			cookie: oauthStateCookie,
+			detail: { tags: ["Auth"], summary: "Initiate Discord OAuth2 Flow" },
 		}
 	)
 	.get(
@@ -37,12 +38,13 @@ const publicAuthRoutes = new Elysia({ prefix: "/auth" })
 		},
 		{
 			cookie: authCookies,
+			detail: { tags: ["Auth"], summary: "Handle Discord OAuth2 Callback" },
 		}
 	);
 
 const protectedAuthRoutes = new Elysia({ prefix: "/auth" })
 	.use(requireAuth)
-	.get("/me", ({ user }) => ({ user }))
+	.get("/me", ({ user }) => ({ user }), { detail: { tags: ["Auth"], summary: "Get Current Authenticated User" } })
 	.post(
 		"/logout",
 		async ({ cookie: { auth_session }, session }) => {
@@ -55,6 +57,7 @@ const protectedAuthRoutes = new Elysia({ prefix: "/auth" })
 		},
 		{
 			cookie: authSessionCookie,
+			detail: { tags: ["Auth"], summary: "Logout Current User" },
 		}
 	);
 

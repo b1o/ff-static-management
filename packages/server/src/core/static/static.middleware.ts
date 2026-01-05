@@ -1,38 +1,53 @@
-import Elysia from "elysia";
+import { Elysia, t } from "elysia";
 import { requireAuth } from "../auth/auth.middleware";
 import { StaticService } from "./static.service";
+import { ForbiddenError } from "../../lib/errors";
 
 export const requireStaticMember = new Elysia({ name: "requireStaticMember" })
 	.use(requireAuth)
-	.derive({ as: "scoped" }, async ({ user, params, set }) => {
-		const staticId = params.staticId;
-		if (!user) {
-			set.status = 401;
-			throw new Error("Unauthorized");
-		}
-		if (!staticId) {
-			set.status = 400;
-			throw new Error("Static ID is required");
-		}
-		const staticMember = await StaticService.findMember(staticId, user.id);
+	.guard({ params: t.Object({ staticId: t.String() }) })
+	.resolve(async ({ user, params }) => {
+		console.log("requireStaticMember running", user?.id);
+		if (!user || !params.staticId) throw new ForbiddenError("Invalid request");
+		const staticMember = await StaticService.findMember(params.staticId, user.id);
 		if (!staticMember) {
-			set.status = 403;
-			throw new Error("Access denied to this static");
+			throw new ForbiddenError("Static membership required");
 		}
 		return { staticMember };
-	});
+	})
+	.as("scoped");
+
+export const requireStaticManager = new Elysia({ name: "requireStaticManager" })
+	.use(requireAuth)
+	.guard({ params: t.Object({ staticId: t.String() }) })
+	.resolve(async ({ user, params }) => {
+		console.log("requireStaticManager running", user?.id);
+		if (!user || !params.staticId) throw new ForbiddenError("Invalid request");
+		const staticMember = await StaticService.findMember(params.staticId, user.id);
+		if (!staticMember) {
+			throw new ForbiddenError("Static membership required");
+		}
+		if (!staticMember.canManage) {
+			throw new ForbiddenError("Static manager permissions required");
+		}
+		return { staticMember, isManager: true as const };
+	})
+	.as("scoped");
 
 export const requireStaticLeader = new Elysia({ name: "requireStaticLeader" })
 	.use(requireAuth)
-	.use(requireStaticMember)
-	.derive({ as: "scoped" }, async ({ staticMember, set }) => {
+	.guard({ params: t.Object({ staticId: t.String() }) })
+	.resolve(async ({ user, params }) => {
+		console.log("requireStaticLeader running", user?.id);
+		if (!user || !params.staticId) throw new ForbiddenError("Invalid request");
+		const staticMember = await StaticService.findMember(params.staticId, user.id);
 		if (!staticMember) {
-			set.status = 401;
-			throw new Error("Unauthorized");
+			throw new ForbiddenError("Static membership required");
 		}
 		if (staticMember.role !== "leader") {
-			set.status = 403;
-			throw new Error("Leader role required to perform this action");
+			throw new ForbiddenError("Static leader permissions required");
 		}
-		return {};
-	});
+		console.log(staticMember);
+		return { staticMember, isLeader: true as const };
+	})
+	.as("scoped");

@@ -3,7 +3,7 @@
 	"private": true,
 	"scripts": {
 		"dev:server": "bun --filter server dev",
-		"dev:web": "bun --filter web start",
+		"dev:web": "cd packages/web && bun start",
 		"db:generate": "bun --filter server db:generate",
 		"db:migrate": "bun --filter server db:migrate",
 		"dev": "concurrently \"bun --filter server dev\" \"bun --filter web start\""
