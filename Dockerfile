@@ -12,7 +12,7 @@ RUN bun install --frozen-lockfile --ignore-scripts
 FROM deps AS frontend-build
 # Copy server source for type generation
 COPY packages/server ./packages/server
-COPY tsconfig.json ./
+COPY tsconfig.base.json ./
 # Build types first (needed by frontend)
 RUN bun run build:types
 # Copy and build frontend
