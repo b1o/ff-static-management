@@ -3,7 +3,9 @@ import { treaty } from '@elysiajs/eden';
 import { App } from '@ff-static/api';
 import type { User } from '@ff-static/api/types';
 
-export const API_URL = isDevMode() ? 'http://localhost:3000' : '';
+export const API_URL = isDevMode()
+  ? 'http://localhost:3000'
+  : 'https://ff-static-management.fly.dev/';
 
 export const API = new InjectionToken('API', {
   providedIn: 'root',

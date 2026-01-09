@@ -28,7 +28,7 @@ COPY packages/server/package.json ./
 RUN bun install --frozen-lockfile --production --ignore-scripts
 
 COPY packages/server/src ./src
-COPY --from=frontend-build /app/packages/web/dist/web ./public
+COPY --from=frontend-build /app/packages/web/dist/web/browser ./public
 
 # Create data directory for SQLite
 RUN mkdir -p ./data

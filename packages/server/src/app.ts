@@ -1,6 +1,8 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
+import { migrate } from "drizzle-orm/bun-sqlite/migrator";
+import { db } from "./db";
 import { authRoutes } from "./core/auth";
 import { adminRoutes } from "./core/admin";
 import { devRoutes } from "./core/dev";
@@ -8,6 +10,10 @@ import { staticsRoutesCombined } from "./core/static";
 import { openapi } from "@elysiajs/openapi";
 
 const isProduction = process.env.NODE_ENV === "production";
+
+// Run migrations on startup
+migrate(db, { migrationsFolder: "./src/db/migrations" });
+console.log("Database migrations complete");
 
 const app = new Elysia()
 	.use(
@@ -67,11 +73,9 @@ if (isProduction) {
 		staticPlugin({
 			assets: "./public",
 			prefix: "/",
+			indexHTML: true
 		})
 	);
-
-	// SPA fallback - serve index.html for unmatched routes
-	app.get("*", () => Bun.file("./public/index.html"));
 }
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
