@@ -1,28 +1,31 @@
 FROM oven/bun:1 AS base
 WORKDIR /app
 
-# Install all dependencies (monorepo)
+# Install dependencies (skip postinstall, we'll build types manually)
 FROM base AS deps
 COPY package.json bun.lock ./
 COPY packages/server/package.json ./packages/server/
 COPY packages/web/package.json ./packages/web/
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --ignore-scripts
 
-# Build frontend
+# Build types and frontend
 FROM deps AS frontend-build
+# Copy server source for type generation
+COPY packages/server ./packages/server
+COPY tsconfig.json ./
+# Build types first (needed by frontend)
+RUN bun run build:types
+# Copy and build frontend
 COPY packages/web ./packages/web
-COPY packages/server/src/types.ts ./packages/server/src/types.ts
-COPY packages/server/src/app.ts ./packages/server/src/app.ts
-COPY packages/server/src/db/schema.ts ./packages/server/src/db/schema.ts
 RUN cd packages/web && bun run build
 
 # Production image
 FROM base AS runner
 WORKDIR /app
 
-# Copy server package and dependencies
+# Copy server package and install prod dependencies
 COPY packages/server/package.json ./
-RUN bun install --frozen-lockfile --production
+RUN bun install --frozen-lockfile --production --ignore-scripts
 
 COPY packages/server/src ./src
 COPY --from=frontend-build /app/packages/web/dist/web ./public
