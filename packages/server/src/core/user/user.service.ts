@@ -5,6 +5,15 @@ import type { DiscordUser } from "../../lib/discord-oauth";
 import { generateIdFromEntropySize } from "lucia";
 import { DatabaseError } from "../../lib/errors";
 
+/**
+ * Check if a Discord ID is in the admin allowlist.
+ * Admin status is synced on every login (can promote or demote).
+ */
+function isAdminDiscordId(discordId: string): boolean {
+	const adminIds = process.env.ADMIN_DISCORD_IDS?.split(",").map((id) => id.trim()) ?? [];
+	return adminIds.includes(discordId);
+}
+
 export abstract class UserService {
 	static async findById(id: string) {
 		return db.query.users.findFirst({
@@ -18,7 +27,7 @@ export abstract class UserService {
 		});
 	}
 
-	static async create(data: Omit<NewUser, "id" | "createdAt">) {
+	static async create(data: Omit<NewUser, "id" | "createdAt" | "isAdmin">) {
 		const userId = generateIdFromEntropySize(10);
 		const [newUser] = await db
 			.insert(users)
@@ -28,6 +37,7 @@ export abstract class UserService {
 				username: data.username,
 				displayName: data.displayName,
 				avatar: data.avatar,
+				isAdmin: isAdminDiscordId(data.discordId),
 			})
 			.returning();
 
@@ -42,6 +52,7 @@ export abstract class UserService {
 				username: discordUser.username,
 				displayName: discordUser.global_name || discordUser.username,
 				avatar: discordUser.avatar,
+				isAdmin: isAdminDiscordId(discordUser.id),
 			})
 			.where(eq(users.id, userId))
 			.returning();
