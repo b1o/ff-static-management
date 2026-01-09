@@ -6,7 +6,7 @@ export class NotFoundError extends Error {
 	}
 }
 
-export class ConfilictError extends Error {
+export class ConflictError extends Error {
 	status = 409;
 	constructor(message = "Conflict") {
 		super(message);

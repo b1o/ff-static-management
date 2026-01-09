@@ -1,7 +1,22 @@
 {
-	"name": "server",
+	"name": "@ff-static/api",
 	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/app.d.ts",
+			"default": "./src/app.ts"
+		},
+		"./types": {
+			"types": "./dist/types.d.ts"
+		},
+		"./schema": {
+			"types": "./dist/db/schema.d.ts",
+			"default": "./src/db/schema.ts"
+		}
+	},
 	"scripts": {
+		"build:types": "tsc",
+		"prepack": "tsc",
 		"dev": "bun run --watch src/app.ts",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "bun run src/db/migrate.ts",
@@ -10,6 +25,7 @@
 	"dependencies": {
 		"@elysiajs/cors": "^1.4.1",
 		"@elysiajs/openapi": "^1.4.13",
+		"@elysiajs/static": "^1.4.7",
 		"@lucia-auth/adapter-drizzle": "^1.1.0",
 		"arctic": "^3.7.0",
 		"drizzle-orm": "^0.45.1",

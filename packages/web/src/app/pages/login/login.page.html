@@ -1,0 +1,43 @@
+<div class="min-h-screen flex items-center justify-center bg-dark-950 relative overflow-hidden">
+  <!-- Animated background orbs -->
+  <div
+    class="absolute top-1/4 -left-32 w-96 h-96 bg-pastel-lavender/20 rounded-full blur-3xl animate-pulse"
+  ></div>
+  <div
+    class="absolute bottom-1/4 -right-32 w-96 h-96 bg-pastel-pink/20 rounded-full blur-3xl animate-pulse delay-1000"
+  ></div>
+  <div
+    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pastel-periwinkle/10 rounded-full blur-3xl animate-slow-spin"
+  ></div>
+
+  <!-- Login card -->
+  <div
+    class="relative z-10 flex flex-col items-center gap-8 p-12 rounded-2xl bg-surface/80 backdrop-blur-xl border border-border shadow-2xl shadow-pastel-lavender/5"
+  >
+    <!-- Logo/Brand -->
+    <div class="flex flex-col items-center gap-4">
+      <div
+        class="w-20 h-20 rounded-2xl bg-gradient-to-br from-pastel-lavender via-pastel-pink to-pastel-periwinkle p-[2px] animate-gradient"
+      >
+        <div class="w-full h-full rounded-2xl bg-dark-900 flex items-center justify-center">
+          <span class="text-3xl font-bold text-text-primary">FF</span>
+        </div>
+      </div>
+      <div class="text-center">
+        <h1 class="text-2xl font-semibold text-text-primary">Static Management</h1>
+        <p class="text-text-muted text-sm mt-1">Sign in to manage your statics</p>
+      </div>
+    </div>
+
+    <!-- Discord login button -->
+    <nyct-button variant="primary" size="lg" (click)="auth.login()">
+      <nyct-icon name="discord" size="lg" />
+      <span>Login with Discord</span>
+    </nyct-button>
+
+    <!-- Footer text -->
+    <p class="text-text-muted text-xs text-center max-w-xs">
+      By signing in, you agree to let us access your Discord profile information
+    </p>
+  </div>
+</div>

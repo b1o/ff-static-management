@@ -1,22 +1,11 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { api } from './api';
+import { ToastContainerComponent } from './ui/toast/toast-container.component';
+import { DialogContainerComponent } from './ui/dialog';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, ToastContainerComponent, DialogContainerComponent],
   templateUrl: './app.html',
-  styleUrl: './app.scss',
 })
-export class App {
-  protected readonly title = signal('web');
-
-  constructor() {
-    this.test();
-  }
-
-  async test() {
-    const res = await api.health.get();
-    console.log(res);
-  }
-}
+export class App {}

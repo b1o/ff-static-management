@@ -17,6 +17,8 @@ export const lucia = new Lucia(adapter, {
 		username: data.username,
 		displayName: data.displayName,
 		avatar: data.avatar,
+		isAdmin: data.isAdmin,
+		createdAt: data.createdAt,
 	}),
 });
 
@@ -26,8 +28,10 @@ declare module "lucia" {
 		DatabaseUserAttributes: {
 			discordId: string;
 			username: string;
-			displayName: string | null;
+			displayName: string;
 			avatar: string | null;
+			createdAt: Date;
+			isAdmin: boolean;
 		};
 	}
 }

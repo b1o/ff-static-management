@@ -1,7 +1,19 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql, isNull, lt, or } from "drizzle-orm";
 import { db } from "../../db";
-import { staticMembers, statics, type NewStaticMember } from "../../db/schema";
-import { ConfilictError, DatabaseError } from "../../lib/errors";
+import {
+	inviteCodes,
+	staticMembers,
+	statics,
+	type NewStaticMember,
+} from "../../db/schema";
+import { ConflictError, DatabaseError, NotFoundError } from "../../lib/errors";
+
+export type CreateInviteData = {
+	staticId: string;
+	expiresAt: Date | null;
+	maxUses: number | null;
+	createdBy: string;
+};
 
 export abstract class StaticService {
 	static async create(name: string, userId: string) {
@@ -9,22 +21,39 @@ export abstract class StaticService {
 			where: (s, { eq }) => eq(s.name, name),
 		});
 		if (existingName) {
-			throw new ConfilictError("Static name already exists");
+			throw new ConflictError("Static name already exists");
 		}
 
 		const [newStatic] = await db
 			.insert(statics)
+			.values({ name })
+			.returning();
+
+		if (!newStatic) throw new DatabaseError("Failed to create static");
+
+		await this.addLeader(newStatic.id, userId);
+
+		// Return the static with members (including user data) for frontend consumption
+		const staticWithMembers = await this.findByIdWithMembers(newStatic.id);
+		if (!staticWithMembers) throw new DatabaseError("Failed to retrieve created static");
+
+		return staticWithMembers;
+	}
+
+	/** Internal: Add the creator as leader with canManage: true */
+	private static async addLeader(staticId: string, userId: string) {
+		const [newMember] = await db
+			.insert(staticMembers)
 			.values({
-				name: name,
+				staticId,
+				userId,
+				role: "leader",
+				canManage: true,
 			})
 			.returning();
-		if (!newStatic) throw new DatabaseError("Failed to create static");
-		const leader = await this.addMember({
-			staticId: newStatic.id,
-			userId: userId,
-			role: "leader",
-		});
-		return { newStatic, leader };
+
+		if (!newMember) throw new DatabaseError("Failed to add static leader");
+		return newMember;
 	}
 
 	static async findById(id: string) {
@@ -55,7 +84,7 @@ export abstract class StaticService {
 	static async getUsersStatics(userId: string) {
 		return await db.query.staticMembers
 			.findMany({
-				where: (sm, { eq }) => eq(sm.userId, userId) && eq(sm.canManage, true),
+				where: (sm, { eq }) => eq(sm.userId, userId),
 				with: {
 					static: true,
 				},
@@ -64,25 +93,19 @@ export abstract class StaticService {
 	}
 
 	static async addMember(data: NewStaticMember) {
-		const existingMember = await db.query.staticMembers.findFirst({
-			where: (cm, { eq, and }) => and(eq(cm.staticId, data.staticId), eq(cm.userId, data.userId)),
-		});
-
-		if (existingMember) {
-			throw new ConfilictError("User is already a member of this static");
-		}
-
 		const [newMember] = await db
 			.insert(staticMembers)
 			.values({
 				staticId: data.staticId,
 				userId: data.userId,
-				role: data.role,
-				canManage: data.role === "leader",
+				canManage: false,
 			})
+			.onConflictDoNothing()
 			.returning();
 
-		if (!newMember) throw new DatabaseError("Failed to add static member");
+		if (!newMember) {
+			throw new ConflictError("User is already a member of this static");
+		}
 
 		return newMember;
 	}
@@ -92,8 +115,9 @@ export abstract class StaticService {
 			.delete(staticMembers)
 			.where(and(eq(staticMembers.staticId, staticId), eq(staticMembers.userId, userId)))
 			.returning();
+
 		if (!deleteResult) {
-			throw new DatabaseError("Failed to remove static member or member does not exist");
+			throw new NotFoundError("Member not found in this static");
 		}
 		return deleteResult;
 	}
@@ -104,16 +128,122 @@ export abstract class StaticService {
 			.set({ canManage })
 			.where(and(eq(staticMembers.staticId, staticId), eq(staticMembers.userId, userId)))
 			.returning();
+
 		if (!updatedMember) {
-			throw new DatabaseError("Failed to update static member role or member does not exist");
+			throw new NotFoundError("Member not found in this static");
 		}
 		return updatedMember;
 	}
 
 	static async deleteStatic(staticId: string) {
-		const [deleteResult] = await db.delete(statics).where(eq(statics.id, staticId)).returning();
+		const [deleteResult] = await db
+			.delete(statics)
+			.where(eq(statics.id, staticId))
+			.returning();
+
 		if (!deleteResult) {
-			throw new DatabaseError("Failed to delete static or static does not exist");
+			throw new NotFoundError("Static not found");
+		}
+		return deleteResult;
+	}
+
+	// ==================== Invitations ====================
+
+	/** Get all invites for a static. Caller must be authorized. */
+	static async getStaticInvites(staticId: string) {
+		return await db.query.inviteCodes.findMany({
+			where: (ic, { eq }) => eq(ic.staticId, staticId),
+		});
+	}
+
+	/** Generate a new invite code. Caller must be authorized. */
+	static async generateInviteCode(data: CreateInviteData) {
+		const code = crypto
+			.getRandomValues(new Uint8Array(6))
+			.reduce((acc, byte) => acc + byte.toString(16).padStart(2, "0"), "");
+
+		const [newInvite] = await db
+			.insert(inviteCodes)
+			.values({
+				staticId: data.staticId,
+				code,
+				expiresAt: data.expiresAt,
+				maxUses: data.maxUses,
+				createdBy: data.createdBy,
+			})
+			.returning();
+
+		if (!newInvite) {
+			throw new DatabaseError("Failed to generate invite code");
+		}
+		return newInvite;
+	}
+
+	/** Get invite by code (no auth check - use for validation) */
+	static async getInviteByCode(code: string) {
+		return await db.query.inviteCodes.findFirst({
+			where: (ic, { eq }) => eq(ic.code, code),
+		});
+	}
+
+	/**
+	 * Consume an invite code atomically.
+	 * Uses atomic increment to prevent race conditions.
+	 */
+	static async consumeInviteCode(code: string, userId: string) {
+		// Atomic update: only succeeds if invite is valid
+		const [updatedInvite] = await db
+			.update(inviteCodes)
+			.set({ uses: sql`${inviteCodes.uses} + 1` })
+			.where(
+				and(
+					eq(inviteCodes.code, code),
+					// Check expiration (null = no expiration)
+					or(
+						isNull(inviteCodes.expiresAt),
+						sql`${inviteCodes.expiresAt} > unixepoch('now')`
+					),
+					// Check max uses (null = unlimited)
+					or(
+						isNull(inviteCodes.maxUses),
+						lt(inviteCodes.uses, inviteCodes.maxUses)
+					)
+				)
+			)
+			.returning();
+
+		if (!updatedInvite) {
+			// Check if invite exists to give better error
+			const invite = await this.getInviteByCode(code);
+			if (!invite) {
+				throw new NotFoundError("Invite code not found");
+			}
+			throw new ConflictError("Invite code is no longer valid");
+		}
+
+		// Add user as member
+		const staticMember = await this.addMember({
+			staticId: updatedInvite.staticId,
+			userId,
+		});
+
+		return { invite: updatedInvite, staticMember };
+	}
+
+	/** Delete invite. Verifies invite belongs to the specified static. */
+	static async deleteInvite(staticId: string, code: string) {
+		const [deleteResult] = await db
+			.delete(inviteCodes)
+			.where(
+				and(
+					eq(inviteCodes.code, code),
+					eq(inviteCodes.staticId, staticId) // Tenant boundary
+				)
+			)
+			.returning();
+
+		if (!deleteResult) {
+			throw new NotFoundError("Invite not found");
 		}
 		return deleteResult;
 	}

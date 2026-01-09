@@ -1,4 +1,4 @@
-import Elysia from "elysia";
+import Elysia, { t } from "elysia";
 import { requireAuth } from "./auth.middleware";
 import { AuthService } from "./auth.service";
 import { authCookies, authSessionCookie, oauthStateCookie } from "./auth.model";
@@ -42,9 +42,31 @@ const publicAuthRoutes = new Elysia({ prefix: "/auth" })
 		}
 	);
 
+const adminSessionCookieSchema = t.Cookie({
+	admin_session: t.Optional(t.String()),
+});
+
 const protectedAuthRoutes = new Elysia({ prefix: "/auth" })
 	.use(requireAuth)
-	.get("/me", ({ user }) => ({ user }), { detail: { tags: ["Auth"], summary: "Get Current Authenticated User" } })
+	.get(
+		"/me",
+		({ user, cookie: { admin_session } }) => ({
+			user: {
+				id: user.id,
+				discordId: user.discordId,
+				username: user.username,
+				displayName: user.displayName,
+				avatar: user.avatar,
+				isAdmin: user.isAdmin,
+				createdAt: user.createdAt,
+			},
+			isImpersonating: !!admin_session.value,
+		}),
+		{
+			cookie: adminSessionCookieSchema,
+			detail: { tags: ["Auth"], summary: "Get Current Authenticated User" },
+		}
+	)
 	.post(
 		"/logout",
 		async ({ cookie: { auth_session }, session }) => {

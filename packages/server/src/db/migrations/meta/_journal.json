@@ -15,6 +15,20 @@
       "when": 1767447373602,
       "tag": "0001_nasty_maximus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1767883288831,
+      "tag": "0002_hard_lenny_balinger",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1767958984043,
+      "tag": "0003_sturdy_fabian_cortez",
+      "breakpoints": true
     }
   ]
 }

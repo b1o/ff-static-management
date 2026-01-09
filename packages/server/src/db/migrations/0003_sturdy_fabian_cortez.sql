@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `static_members_static_id_user_id_unique` ON `static_members` (`static_id`,`user_id`);

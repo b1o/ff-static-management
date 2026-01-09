@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Dark base palette */
+  --color-dark-950: #0f0f14;
+  --color-dark-900: #16161d;
+  --color-dark-800: #1e1e28;
+  --color-dark-700: #2a2a38;
+  --color-dark-600: #3d3d4f;
+  --color-dark-500: #5c5c72;
+  --color-dark-400: #8585a0;
+  --color-dark-300: #b0b0c8;
+  --color-dark-200: #d4d4e4;
+  --color-dark-100: #ececf4;
+
+  /* Pastel accent palette */
+  --color-pastel-lavender: #c4b5fd;
+  --color-pastel-pink: #f0abfc;
+  --color-pastel-rose: #fda4af;
+  --color-pastel-peach: #fed7aa;
+  --color-pastel-mint: #a7f3d0;
+  --color-pastel-sky: #a5d8ff;
+  --color-pastel-periwinkle: #a5b4fc;
+
+  /* Primary - soft lavender */
+  --color-primary-400: #c4b5fd;
+  --color-primary-500: #a78bfa;
+  --color-primary-600: #8b5cf6;
+
+  /* Semantic surfaces */
+  --color-surface: var(--color-dark-900);
+  --color-surface-elevated: var(--color-dark-800);
+  --color-surface-hover: var(--color-dark-700);
+  --color-border: var(--color-dark-700);
+  --color-border-subtle: var(--color-dark-800);
+
+  /* Text colors - soft but readable */
+  --color-text-primary: var(--color-dark-100);
+  --color-text-secondary: var(--color-dark-300);
+  --color-text-muted: var(--color-dark-400);
+
+  /* Sidebar dimensions */
+  --sidebar-width: 16rem;
+  --sidebar-width-collapsed: 4rem;
+  --sidebar-transition: 200ms;
+}
+
+/* Base styles */
+html,
+body {
+  @apply h-full m-0 p-0 bg-dark-950 text-text-primary antialiased;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Animation utilities */
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.slide-in-from-right {
+  animation-name: slide-in-from-right;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+.scale-in {
+  animation-name: scale-in;
+}
+
+.duration-200 {
+  animation-duration: 200ms;
+}
+
+.duration-150 {
+  animation-duration: 150ms;
+}
