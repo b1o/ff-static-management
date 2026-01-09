@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, file } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
@@ -15,7 +15,7 @@ const isProduction = process.env.NODE_ENV === "production";
 migrate(db, { migrationsFolder: "./src/db/migrations" });
 console.log("Database migrations complete");
 
-const app = new Elysia()
+const API = new Elysia({ prefix: "/api" })
 	.use(
 		openapi({
 			documentation: {
@@ -35,6 +35,19 @@ const app = new Elysia()
 			},
 		})
 	)
+
+	.get("/health", () => ({ status: "ok", timestamp: Date.now() }))
+	.use(authRoutes)
+	.use(adminRoutes)
+	.use(staticsRoutesCombined);
+
+const app = new Elysia()
+	.use(
+		cors({
+			origin: process.env.FRONTEND_URL || "http://localhost:4200",
+			credentials: true,
+		})
+	)
 	.onError(({ error, set }) => {
 		// Set HTTP status code from error if available
 		if (error instanceof Error && "status" in error && typeof error.status === "number") {
@@ -51,37 +64,38 @@ const app = new Elysia()
 		console.error("Unknown error:", error);
 		return { error: "Unknown error occurred" };
 	})
+	.use(API)
 	.use(
-		cors({
-			origin: process.env.FRONTEND_URL || "http://localhost:4200",
-			credentials: true,
-		})
-	)
-	.get("/health", () => ({ status: "ok", timestamp: Date.now() }))
-	.use(authRoutes)
-	.use(adminRoutes)
-	.use(staticsRoutesCombined);
-
-// Register dev routes before starting server (only in non-production)
-if (!isProduction) {
-	app.use(devRoutes);
-}
-
-// Serve Angular frontend in production
-if (isProduction) {
-	app.use(
 		staticPlugin({
 			assets: "./public",
 			prefix: "/",
-			indexHTML: true
+			indexHTML: true,
+			alwaysStatic: true,
 		})
-	);
-}
+	)
+	.get("/*", ({ path }) => {
+		console.log(`Unhandled route: ${path}, serving index.html`);
+		return file("./public/index.html");
+	})
+	.onError(({ code, path, set, headers }) => {
+		const acceptsJson = headers["accept"]?.includes("application/json");
+
+		if (code === "NOT_FOUND" && !path.startsWith("/api") && !path.startsWith("/assets") && !acceptsJson) {
+			set.status = 200;
+			return file("./public/index.html");
+		}
+	});
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-app.listen(port, (info) => {
-	console.log(`Server running at ${info.protocol}://${info.hostname}:${info.port}`);
-});
+app.listen(
+	{
+		hostname: "0.0.0.0",
+		port,
+	},
+	(info) => {
+		console.log(`Server running at ${info.protocol}://${info.hostname}:${info.port}`);
+	}
+);
 
 export type App = typeof app;

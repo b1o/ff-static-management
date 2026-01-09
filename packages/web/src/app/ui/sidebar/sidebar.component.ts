@@ -5,6 +5,7 @@ import { NavItem } from '../nav.types';
 import { AuthService } from '../../core/auth/auth.service';
 import { getUserAvatarUrl } from '../../utils/utils';
 import { ButtonComponent, IconButtonComponent } from '../primitives';
+import { StaticsStore } from '../../features/statics/statics.store';
 
 @Component({
   selector: 'nyct-sidebar',
@@ -44,6 +45,7 @@ import { ButtonComponent, IconButtonComponent } from '../primitives';
 export class SidebarComponent {
   collapsed = signal(false);
   auth = inject(AuthService);
+  staticStore = inject(StaticsStore)
 
   protected userInfo = computed(() => {
     const user = this.auth.user();
@@ -68,7 +70,9 @@ export class SidebarComponent {
         label: 'Statics',
         icon: 'folder',
         children: [
-          { label: 'My Statics', route: '/statics' },
+          { label: 'My Statics', route: '/statics', children: [
+            ...this.staticStore.statics().map(s => ({ label: s.name, route: `/statics/${s.id}` }))
+          ] },
           { label: 'Create New', route: '/statics/new' },
         ],
       },

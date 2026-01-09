@@ -5,7 +5,7 @@ import type { User } from '@ff-static/api/types';
 
 export const API_URL = isDevMode()
   ? 'http://localhost:3000'
-  : 'https://ff-static-management.fly.dev/';
+  : 'https://ff-static-management.fly.dev';
 
 export const API = new InjectionToken('API', {
   providedIn: 'root',
@@ -14,9 +14,9 @@ export const API = new InjectionToken('API', {
       onRequest: (_path, options) => {
         options.credentials = 'include';
       },
-    }),
+    }).api,
 });
 
 export type Api = ReturnType<typeof treaty<App>>;
-export type MeResposne = Awaited<ReturnType<Api['auth']['me']['get']>>;
+export type MeResposne = Awaited<ReturnType<Api['api']['auth']['me']['get']>>;
 export type { User };

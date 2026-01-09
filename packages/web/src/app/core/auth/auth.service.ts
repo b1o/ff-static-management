@@ -1,5 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { API, API_URL, User } from '../api/api';
+import { apiCall } from '../api/api.utils';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -10,8 +11,11 @@ export class AuthService {
   /** Check if current user is an admin */
   public isAdmin = computed(() => this.user()?.isAdmin ?? false);
 
-  public login() {
-    window.location.href = `${API_URL}/auth/discord`;
+  public async login() {
+    const response = await apiCall(() => this.api.auth.discord.get());
+    if (response.success) {
+      window.location.href = response.data.url;
+    }
   }
 
   public async me() {

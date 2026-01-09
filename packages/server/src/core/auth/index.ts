@@ -12,7 +12,9 @@ const publicAuthRoutes = new Elysia({ prefix: "/auth" })
 			const { url, state } = AuthService.createDiscordAuthorizationURL();
 
 			oauth_state.value = state;
-			return redirect(url);
+			return {
+				url,
+			}
 		},
 		{
 			cookie: oauthStateCookie,

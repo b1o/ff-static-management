@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, unique } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, unique, index } from "drizzle-orm/sqlite-core";
 
 // === Auth (Lucia) ===
 export const users = sqliteTable("users", {
@@ -65,7 +65,7 @@ export const inviteCodes = sqliteTable("invite_codes", {
 	code: text("code").notNull().unique(),
 	createdBy: text("created_by")
 		.notNull()
-		.references(() => users.id),
+		.references(() => users.id, { onDelete: "set null" }),
 	expiresAt: integer("expires_at", { mode: "timestamp" }),
 	maxUses: integer("max_uses"),
 	uses: integer("uses").notNull().default(0),
@@ -73,6 +73,59 @@ export const inviteCodes = sqliteTable("invite_codes", {
 		.notNull()
 		.$defaultFn(() => new Date()),
 });
+
+// === Characters ===
+export const characters = sqliteTable(
+	"characters",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		name: text("name").notNull(),
+		world: text("world").notNull(),
+		DC: text("dc").notNull(),
+		data: text("data", { mode: "json" }).notNull(),
+		createdAt: integer("created_at", { mode: "timestamp" })
+			.notNull()
+			.$defaultFn(() => new Date()),
+		updatedAt: integer("updated_at", { mode: "timestamp" })
+			.notNull()
+			.$onUpdateFn(() => new Date()),
+	},
+	(table) => [
+		unique().on(table.userId, table.name, table.world, table.DC),
+		index("idx_characters_userId").on(table.userId),
+	]
+);
+
+export const staticCharacters = sqliteTable(
+	"static_characters",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		staticId: text("static_id")
+			.notNull()
+			.references(() => statics.id, { onDelete: "cascade" }),
+		characterId: text("character_id")
+			.notNull()
+			.references(() => characters.id, { onDelete: "cascade" }),
+		role: text("role", { enum: ["main", "alt"] })
+			.notNull()
+			.default("main"),
+		assignedAt: integer("assigned_at", { mode: "timestamp" })
+			.notNull()
+			.$defaultFn(() => new Date()),
+	},
+	(table) => [
+		unique().on(table.staticId, table.characterId),
+		index("idx_staticCharacters_staticId").on(table.staticId),
+		index("idx_staticCharacters_characterId").on(table.characterId),
+	]
+);
 
 // === Type exports ===
 export type User = typeof users.$inferSelect;

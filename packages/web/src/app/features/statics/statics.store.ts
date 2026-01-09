@@ -5,14 +5,15 @@ import {
   withComputed,
   withMethods,
   patchState,
+  withHooks,
 } from '@ngrx/signals';
-import type { Static,  InviteCode } from '@ff-static/api/types';
+import type { Static, InviteCode } from '@ff-static/api/types';
 import { StaticsService, StaticWithMembers } from './statics.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/auth/auth.service';
 
 interface StaticsState {
-  statics: (Static & {inviteLinks?: InviteCode[]})[];
+  statics: (Static & { inviteLinks?: InviteCode[] })[];
   selectedStatic: StaticWithMembers | null;
   loading: boolean;
   error: string | null;
@@ -58,11 +59,7 @@ export const StaticsStore = signalStore(
     }),
   })),
   withMethods(
-    (
-      store,
-      staticsService = inject(StaticsService),
-      toastService = inject(ToastService)
-    ) => ({
+    (store, staticsService = inject(StaticsService), toastService = inject(ToastService)) => ({
       /** Load all statics for the current user */
       async loadMyStatics() {
         patchState(store, { loading: true, error: null });
@@ -113,8 +110,7 @@ export const StaticsStore = signalStore(
         if (result.success) {
           patchState(store, {
             statics: store.statics().filter((s) => s.id !== id),
-            selectedStatic:
-              store.selectedStatic()?.id === id ? null : store.selectedStatic(),
+            selectedStatic: store.selectedStatic()?.id === id ? null : store.selectedStatic(),
             loading: false,
           });
           toastService.success('Static deleted successfully');
@@ -151,10 +147,7 @@ export const StaticsStore = signalStore(
       },
 
       /** Update member permissions */
-      async updateMemberPermissions(
-        userId: string,
-        canManage: boolean
-      ): Promise<boolean> {
+      async updateMemberPermissions(userId: string, canManage: boolean): Promise<boolean> {
         const staticData = store.selectedStatic();
         if (!staticData) return false;
 
@@ -191,11 +184,7 @@ export const StaticsStore = signalStore(
         const staticData = store.selectedStatic();
         if (!staticData) return null;
         patchState(store, { loading: true, error: null });
-        const result = await staticsService.generateInviteLink(
-          staticData.id,
-          expiresAt,
-          maxUses
-        );
+        const result = await staticsService.generateInviteLink(staticData.id, expiresAt, maxUses);
         if (result.success) {
           patchState(store, { loading: false });
           const code = result.data.inviteCode.code;
@@ -217,5 +206,11 @@ export const StaticsStore = signalStore(
         patchState(store, { selectedStatic: null });
       },
     })
-  )
+  ),
+  withHooks({
+    onInit: (store) => {
+      // Automatically load statics when the store is initialized
+      store.loadMyStatics();
+    },
+  })
 );
