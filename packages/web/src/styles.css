@@ -13,31 +13,49 @@
   --color-dark-200: #d4d4e4;
   --color-dark-100: #ececf4;
 
-  /* Pastel accent palette */
-  --color-pastel-lavender: #c4b5fd;
-  --color-pastel-pink: #f0abfc;
-  --color-pastel-rose: #fda4af;
-  --color-pastel-peach: #fed7aa;
-  --color-pastel-mint: #a7f3d0;
-  --color-pastel-sky: #a5d8ff;
-  --color-pastel-periwinkle: #a5b4fc;
+  /* Cute pastel palette - light theme */
+  --color-pastel-50: #fffbfe;
+  --color-pastel-100: #fff5f9;
+  --color-pastel-200: #ffebf3;
+  --color-pastel-300: #ffd6e8;
+  --color-pastel-400: #ffb8d4;
+  --color-pastel-500: #ff9fc4;
+  --color-pastel-600: #e888ad;
+  --color-pastel-700: #c66d91;
+  --color-pastel-800: #8b4d66;
+  --color-pastel-900: #5c3344;
+  --color-pastel-950: #3d2230;
 
-  /* Primary - soft lavender */
-  --color-primary-400: #c4b5fd;
-  --color-primary-500: #a78bfa;
-  --color-primary-600: #8b5cf6;
+  /* Pastel accent palette - shared */
+  --color-accent-lavender: #c4b5fd;
+  --color-accent-pink: #f9a8d4;
+  --color-accent-rose: #fda4af;
+  --color-accent-peach: #fed7aa;
+  --color-accent-mint: #a7f3d0;
+  --color-accent-sky: #a5d8ff;
+  --color-accent-periwinkle: #a5b4fc;
+  --color-accent-lilac: #ddd6fe;
+  --color-accent-blush: #fecdd3;
+  --color-accent-cream: #fef3c7;
 
-  /* Semantic surfaces */
-  --color-surface: var(--color-dark-900);
-  --color-surface-elevated: var(--color-dark-800);
-  --color-surface-hover: var(--color-dark-700);
-  --color-border: var(--color-dark-700);
-  --color-border-subtle: var(--color-dark-800);
+  /* Primary colors - will be overridden by theme */
+  --color-primary-300: var(--theme-primary-300);
+  --color-primary-400: var(--theme-primary-400);
+  --color-primary-500: var(--theme-primary-500);
+  --color-primary-600: var(--theme-primary-600);
 
-  /* Text colors - soft but readable */
-  --color-text-primary: var(--color-dark-100);
-  --color-text-secondary: var(--color-dark-300);
-  --color-text-muted: var(--color-dark-400);
+  /* Semantic surfaces - will be overridden by theme */
+  --color-surface: var(--theme-surface);
+  --color-surface-elevated: var(--theme-surface-elevated);
+  --color-surface-hover: var(--theme-surface-hover);
+  --color-border: var(--theme-border);
+  --color-border-subtle: var(--theme-border-subtle);
+  --color-backdrop: var(--theme-backdrop);
+
+  /* Text colors - will be overridden by theme */
+  --color-text-primary: var(--theme-text-primary);
+  --color-text-secondary: var(--theme-text-secondary);
+  --color-text-muted: var(--theme-text-muted);
 
   /* Sidebar dimensions */
   --sidebar-width: 16rem;
@@ -45,11 +63,167 @@
   --sidebar-transition: 200ms;
 }
 
+/* ============================================
+   DARK THEME (default)
+   ============================================ */
+:root,
+[data-theme='dark'] {
+  --theme-primary-300: #d4c4ff;
+  --theme-primary-400: #c4b5fd;
+  --theme-primary-500: #a78bfa;
+  --theme-primary-600: #8b5cf6;
+
+  --theme-surface: #16161d;
+  --theme-surface-elevated: #1e1e28;
+  --theme-surface-hover: #2a2a38;
+  --theme-border: #2a2a38;
+  --theme-border-subtle: #1e1e28;
+  --theme-backdrop: #0f0f14;
+
+  --theme-text-primary: #ececf4;
+  --theme-text-secondary: #b0b0c8;
+  --theme-text-muted: #8585a0;
+}
+
+/* ============================================
+   CUTE PASTEL THEME
+   A dark theme with soft, playful pastel accents
+   ============================================ */
+[data-theme='pastel'] {
+  /* Primary - soft pink/rose */
+  --theme-primary-300: #fbb6ce;
+  --theme-primary-400: #f687b3;
+  --theme-primary-500: #ed64a6;
+  --theme-primary-600: #d53f8c;
+
+  /* Surfaces - dark with subtle pink/purple undertones */
+  --theme-surface: #1a1520;
+  --theme-surface-elevated: #221a28;
+  --theme-surface-hover: #2d2435;
+  --theme-border: #3d2e45;
+  --theme-border-subtle: #2a1f32;
+  --theme-backdrop: #140f18;
+
+  /* Text - soft pastel tones */
+  --theme-text-primary: #f5e6f0;
+  --theme-text-secondary: #d4b8cc;
+  --theme-text-muted: #a88a9d;
+}
+
 /* Base styles */
-html,
+html {
+  @apply h-full;
+}
+
 body {
-  @apply h-full m-0 p-0 bg-dark-950 text-text-primary antialiased;
+  @apply h-full m-0 p-0 text-text-primary antialiased transition-colors duration-300;
   font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Dark theme background */
+html[data-theme='dark'],
+html:not([data-theme]) {
+  background: #0f0f14;
+}
+
+/* Pastel theme - sketchy/hand-drawn aesthetic */
+html[data-theme='pastel'] {
+  background-color: #1a1520;
+}
+
+/* Pastel theme specific overrides - sketchy aesthetic */
+[data-theme='pastel'] {
+  /* Hand-drawn font for all text */
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  letter-spacing: 0.01em;
+
+  /* Headings use Caveat for more playful look */
+  & h1, & h2, & h3, & h4, & h5, & h6 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  & h1 { font-size: 2.75rem; }
+  & h2 { font-size: 2.25rem; }
+  & h3 { font-size: 1.75rem; }
+
+  /* Hand-drawn style borders using asymmetric radius and thick strokes */
+  & button {
+    border: 2px solid currentColor;
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    transition: all 0.15s ease;
+  }
+
+  & button:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--theme-primary-400);
+  }
+
+  & button:focus-visible {
+    --tw-ring-color: #f687b3;
+  }
+
+  /* Input fields with sketchy borders */
+  & input,
+  & textarea,
+  & select {
+    border: 2px solid var(--theme-border);
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    background: var(--theme-surface-elevated);
+  }
+
+  & input:focus,
+  & textarea:focus,
+  & select:focus {
+    border-color: #f687b3;
+    box-shadow: 2px 2px 0 rgba(246, 135, 179, 0.3);
+  }
+
+  /* Cards and elevated surfaces */
+  & .bg-surface-elevated,
+  & [class*='rounded-lg'],
+  & [class*='rounded-xl'] {
+    border: 2px solid var(--theme-border);
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    box-shadow: 4px 4px 0 rgba(237, 100, 166, 0.15);
+  }
+
+  /* Sidebar with hand-drawn border */
+  & aside {
+    border-right: 3px solid var(--theme-border);
+    border-radius: 0;
+  }
+
+  /* Nav items get playful hover */
+  & a:hover {
+    transform: rotate(-0.5deg);
+  }
+
+  /* Badges and small elements */
+  & [class*='badge'],
+  & [class*='chip'] {
+    border: 2px solid currentColor;
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  }
+}
+
+/* Theme toggle button animation */
+@keyframes theme-switch {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+.theme-toggle-animate {
+  animation: theme-switch 0.5s ease-in-out;
 }
 
 /* Animation utilities */
@@ -84,6 +258,28 @@ body {
   }
 }
 
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+}
+
 .animate-in {
   animation-fill-mode: both;
 }
@@ -98,6 +294,14 @@ body {
 
 .scale-in {
   animation-name: scale-in;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkle 2s ease-in-out infinite;
 }
 
 .duration-200 {

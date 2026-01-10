@@ -4,8 +4,9 @@ import { UserInfoComponent } from '../user-info/user-info.component';
 import { NavItem } from '../nav.types';
 import { AuthService } from '../../core/auth/auth.service';
 import { getUserAvatarUrl } from '../../utils/utils';
-import { ButtonComponent, IconButtonComponent } from '../primitives';
+import { ButtonComponent, IconButtonComponent, IconComponent } from '../primitives';
 import { StaticsStore } from '../../features/statics/statics.store';
+import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'nyct-sidebar',
@@ -15,9 +16,14 @@ import { StaticsStore } from '../../features/statics/statics.store';
       class="flex flex-col h-full bg-surface border-r border-border transition-all duration-200"
       [class.w-64]="!collapsed()"
       [class.w-16]="collapsed()"
+      [class.overflow-visible]="collapsed()"
     >
       <!-- User info section -->
-      <div class="p-4 border-b border-border-subtle flex justify-between items-center">
+      <div
+        class="p-4 border-b border-border-subtle flex items-center"
+        [class.justify-between]="!collapsed()"
+        [class.justify-center]="collapsed()"
+      >
         <nyct-user-info [info]="userInfo()" [collapsed]="collapsed()" />
         @if (!collapsed()) {
         <nyct-button variant="ghost" size="sm" (click)="auth.logout()">Logout</nyct-button>
@@ -25,16 +31,26 @@ import { StaticsStore } from '../../features/statics/statics.store';
       </div>
 
       <!-- Navigation section -->
-      <nav class="flex-1 overflow-y-auto p-2">
+      <nav
+        class="flex-1 p-2"
+        [class.overflow-y-auto]="!collapsed()"
+        [class.overflow-visible]="collapsed()"
+      >
         <nyct-nav-tree [items]="navItems()" [collapsed]="collapsed()" />
       </nav>
 
-      <!-- Collapse toggle -->
-      <div class="p-2 border-t border-border-subtle flex justify-center">
+      <!-- Theme toggle and collapse -->
+      <div
+        class="p-2 border-t border-border-subtle flex"
+        [class.flex-col]="collapsed()"
+        [class.items-center]="collapsed()"
+        [class.gap-1]="collapsed()"
+        [class.justify-between]="!collapsed()"
+      >
         <nyct-icon-button
           [icon]="collapsed() ? 'chevron-right' : 'chevron-left'"
           variant="ghost"
-          size="md"
+          [size]="collapsed() ? 'sm' : 'md'"
           [ariaLabel]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
           (click)="collapsed.set(!collapsed())"
         />
