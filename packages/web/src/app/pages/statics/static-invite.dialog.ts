@@ -301,7 +301,8 @@ export class StaticInviteDialogComponent implements OnInit {
       const code = result.data.inviteCode.code;
       this.generatedInvite.set({
         inviteCode: code,
-        inviteLink: `${API_URL}/statics/invite/${code}`,
+        // TODO: NO MAGIC STRINGS
+        inviteLink: `${API_URL}/api/statics/invite/${code}`,
       });
       this.toastService.success('Invite link generated successfully');
       this.view.set('result');
@@ -322,7 +323,8 @@ export class StaticInviteDialogComponent implements OnInit {
   }
 
   protected async copyInviteLink(invite: InviteCode): Promise<void> {
-    const link = `${API_URL}/statics/invite/${invite.code}`;
+    // TODO: NO MAGIC STRINGS
+    const link = `${API_URL}/api/statics/invite/${invite.code}`;
     await this.copyToClipboard(link);
   }
 

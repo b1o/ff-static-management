@@ -79,6 +79,7 @@ const app = new Elysia()
 	})
 	.onError(({ code, path, set, headers }) => {
 		const acceptsJson = headers["accept"]?.includes("application/json");
+		console.log(path)
 
 		if (code === "NOT_FOUND" && !path.startsWith("/api") && !path.startsWith("/assets") && !acceptsJson) {
 			set.status = 200;

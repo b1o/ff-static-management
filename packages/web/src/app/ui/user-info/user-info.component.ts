@@ -12,7 +12,7 @@ export interface UserInfoComponentProps {
 @Component({
   selector: 'nyct-user-info',
   template: `
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3" [class.justify-center]="collapsed()">
       <!-- Avatar -->
       <div
         class="shrink-0 w-10 h-10 rounded-full bg-primary-600

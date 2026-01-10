@@ -5,7 +5,9 @@ import {
   OnInit,
   OnDestroy,
   computed,
+  effect,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { StaticsStore } from '../../features/statics/statics.store';
 import { DialogService } from '../../ui/dialog';
@@ -24,6 +26,7 @@ import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overla
 import { EmptyStateComponent } from '../../ui/empty-state/empty-state.component';
 import { StaticInviteDialogComponent } from './static-invite.dialog';
 import type { StaticMember, User } from '@ff-static/api/types';
+import { takeUntil, tap } from 'rxjs';
 
 // Extended type for member with user data (as returned by backend)
 type MemberWithUser = StaticMember & { user: User };
@@ -227,12 +230,20 @@ export class StaticsDetailPage implements OnInit, OnDestroy {
     return staticData.members;
   });
 
-  ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.store.loadStatic(id);
-    }
+  constructor() {
+    this.route.paramMap
+      .pipe(
+        tap((params) => {
+          const id = params.get('id');
+          if (id) {
+            this.store.loadStatic(id);
+          }
+        }),
+        takeUntilDestroyed()
+      )
+      .subscribe();
   }
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.store.clearSelectedStatic();

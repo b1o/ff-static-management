@@ -11,7 +11,7 @@ import { ImpersonationBannerComponent } from '../impersonation-banner/impersonat
       <nyct-impersonation-banner />
       <div class="flex flex-1 overflow-hidden">
         <nyct-sidebar />
-        <main class="flex-1 overflow-auto bg-dark-950 p-6">
+        <main class="flex-1 overflow-auto p-6">
           <router-outlet />
         </main>
       </div>
