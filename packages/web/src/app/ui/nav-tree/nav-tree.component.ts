@@ -14,6 +14,7 @@ import { IconComponent } from '../primitives';
           <a
             [routerLink]="item.route"
             routerLinkActive="bg-primary-600/20 text-pastel-lavender"
+            [routerLinkActiveOptions]="{exact: true}"
             class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary
                    hover:bg-surface-hover hover:text-text-primary transition-colors"
             [class.justify-center]="collapsed()"

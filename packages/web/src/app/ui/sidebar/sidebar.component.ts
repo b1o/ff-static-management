@@ -20,7 +20,7 @@ import { StaticsStore } from '../../features/statics/statics.store';
       <div class="p-4 border-b border-border-subtle flex justify-between items-center">
         <nyct-user-info [info]="userInfo()" [collapsed]="collapsed()" />
         @if (!collapsed()) {
-          <nyct-button variant="ghost" size="sm" (click)="auth.logout()">Logout</nyct-button>
+        <nyct-button variant="ghost" size="sm" (click)="auth.logout()">Logout</nyct-button>
         }
       </div>
 
@@ -45,7 +45,7 @@ import { StaticsStore } from '../../features/statics/statics.store';
 export class SidebarComponent {
   collapsed = signal(false);
   auth = inject(AuthService);
-  staticStore = inject(StaticsStore)
+  staticStore = inject(StaticsStore);
 
   protected userInfo = computed(() => {
     const user = this.auth.user();
@@ -70,9 +70,18 @@ export class SidebarComponent {
         label: 'Statics',
         icon: 'folder',
         children: [
-          { label: 'My Statics', route: '/statics', children: [
-            ...this.staticStore.statics().map(s => ({ label: s.name, route: `/statics/${s.id}` }))
-          ] },
+          {
+            label: 'My Statics',
+            route: '/statics',
+            children: [
+              ...(this.staticStore.statics().length !== 1
+                ? [{ label: 'All Statics', route: '/statics' }]
+                : []),
+              ...this.staticStore
+                .statics()
+                .map((s) => ({ label: s.name, route: `/statics/${s.id}` })),
+            ],
+          },
           { label: 'Create New', route: '/statics/new' },
         ],
       },
