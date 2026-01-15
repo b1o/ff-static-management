@@ -8,6 +8,7 @@ import { adminRoutes } from "./core/admin";
 import { devRoutes } from "./core/dev";
 import { staticsRoutesCombined } from "./core/static";
 import { openapi } from "@elysiajs/openapi";
+import { characterRoutes } from "./core/characters";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -39,7 +40,8 @@ const API = new Elysia({ prefix: "/api" })
 	.get("/health", () => ({ status: "ok", timestamp: Date.now() }))
 	.use(authRoutes)
 	.use(adminRoutes)
-	.use(staticsRoutesCombined);
+	.use(staticsRoutesCombined)
+	.use(characterRoutes);
 
 const app = new Elysia()
 	.use(
@@ -79,7 +81,7 @@ const app = new Elysia()
 	})
 	.onError(({ code, path, set, headers }) => {
 		const acceptsJson = headers["accept"]?.includes("application/json");
-		console.log(path)
+		console.log(path);
 
 		if (code === "NOT_FOUND" && !path.startsWith("/api") && !path.startsWith("/assets") && !acceptsJson) {
 			set.status = 200;

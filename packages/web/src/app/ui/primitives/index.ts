@@ -16,3 +16,16 @@ export {
 } from './card';
 export { SpinnerComponent, type SpinnerSize } from './spinner';
 export { AlertComponent, type AlertVariant } from './alert';
+export {
+  ListComponent,
+  ListItemComponent,
+  ListItemSimpleComponent,
+  ListItemLeadingComponent,
+  ListItemContentComponent,
+  ListItemTitleComponent,
+  ListItemDescComponent,
+  ListItemTrailingComponent,
+  ListDividerComponent,
+  type ListSize,
+  type ListItemVariant,
+} from './list';

@@ -7,6 +7,9 @@
 // === Entity Types (from schema) ===
 export type { User, NewUser, Session, Static, NewStatic, StaticMember, NewStaticMember, InviteCode } from "./db/schema";
 
+// === Character Types (from lodestone) ===
+export type { CharacterSearchResult, CharacterProfile } from "./lib/lodestone";
+
 // === App Type (for Eden client) ===
 export type { App } from "./app";
 

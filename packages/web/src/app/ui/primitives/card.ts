@@ -27,7 +27,7 @@ export class CardComponent {
 })
 export class CardHeaderComponent {
   class = input<string>('');
-  classes = computed(() => cn('px-6 py-4 border-b border-border', this.class()));
+  classes = computed(() => cn('px-6 py-4 border-b border-border grow', this.class()));
 }
 
 @Component({

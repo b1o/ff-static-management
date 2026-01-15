@@ -6,8 +6,7 @@ import { adminGuard } from './features/admin/admin.guard';
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () =>
-      import('./pages/login/login.page').then((m) => m.LoginPage),
+    loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
   },
   {
     path: '',
@@ -34,6 +33,11 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         loadChildren: () => import('./features/admin/admin.routes'),
       },
+      {
+        path: 'characters',
+        loadComponent: () =>
+          import('./pages/characters/characters.page').then((m) => m.CharactersPage),
+      },
     ],
-  }
+  },
 ];

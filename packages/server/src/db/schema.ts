@@ -127,6 +127,27 @@ export const staticCharacters = sqliteTable(
 	]
 );
 
+// === Cache ===
+export const cacheCharacters = sqliteTable(
+	"cache_characters",
+	{
+		lodestoneId: text("lodestone_id").primaryKey(),
+		name: text("name").notNull(),
+		world: text("world").notNull(),
+		dc: text("dc").notNull(),
+		avatar: text("avatar"),
+		data: text("data", { mode: "json" }),
+		fetchedAt: integer("fetched_at", { mode: "timestamp" })
+			.notNull()
+			.$defaultFn(() => new Date()),
+		expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+	},
+	(table) => [
+		index("idx_cache_expires").on(table.expiresAt),
+		index("idx_cache_name_world").on(table.name, table.world),
+	]
+);
+
 // === Type exports ===
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -138,3 +159,5 @@ export type NewStaticMember = Pick<StaticMember, "staticId" | "userId">;
 export type InviteCode = typeof inviteCodes.$inferSelect;
 
 export type NewInviteCodeRequest = Pick<InviteCode, "staticId" | "expiresAt" | "maxUses">;
+
+export type CachedCharacter = typeof cacheCharacters.$inferSelect;
