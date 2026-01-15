@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, inject, resource } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, inject, resource, ElementRef } from '@angular/core';
 import { form, Field, debounce, required, minLength } from '@angular/forms/signals';
 import { ReactiveFormsModule } from '@angular/forms';
 import type { CharacterSearchResult, CharacterProfile } from '@ff-static/api/types';
@@ -6,7 +6,6 @@ import {
   InputComponent,
   CardComponent,
   CardContentComponent,
-  CardHeaderComponent,
   SpinnerComponent,
 } from '../../ui/primitives';
 import { EmptyStateComponent } from '../../ui/empty-state/empty-state.component';
@@ -22,6 +21,9 @@ interface CharacterSearchForm {
 @Component({
   selector: 'nyct-character-search',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+  },
   imports: [
     ReactiveFormsModule,
     Field,
@@ -34,60 +36,86 @@ interface CharacterSearchForm {
     CharacterDetailComponent,
   ],
   template: `
-    <div class="max-w-2xl space-y-4">
+    <div class="max-w-2xl flex justify-center flex-col mx-auto">
       <!-- Search Form -->
-      <nyct-card>
-        <nyct-card-content class="p-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <nyct-input
-              label="Character Name"
-              placeholder="Enter character name..."
-              size="sm"
-              [field]="searchForm.characterName"
-            />
-            <nyct-input
-              label="World"
-              placeholder="Enter world name..."
-              size="sm"
-              [field]="searchForm.world"
+      <div class="relative">
+        <nyct-card>
+          <nyct-card-content class="p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <nyct-input
+                label="Character Name"
+                placeholder="Enter character name..."
+                size="sm"
+                [field]="searchForm.characterName"
+                (focus)="openDropdown()"
+              />
+              <nyct-input
+                label="World"
+                placeholder="Enter world name..."
+                size="sm"
+                [field]="searchForm.world"
+                (focus)="openDropdown()"
+              />
+            </div>
+          </nyct-card-content>
+        </nyct-card>
+
+        <!-- Dropdown Results -->
+        @if((searchResults.hasValue() || searchResults.isLoading()) && dropdownOpen()) {
+        <div
+          class="absolute left-0 right-0 z-10 mt-2"
+          animate.enter="dropdown-enter"
+          animate.leave="dropdown-leave"
+        >
+          <nyct-card class="bg-surface/95 backdrop-blur-sm overflow-hidden">
+          <div class="content-stack">
+          @if (searchResults.isLoading()) {
+          <div class="stack-item flex items-center justify-center py-8" animate.enter="fade-in" animate.leave="fade-out">
+            <nyct-spinner size="md" />
+          </div>
+          } @else if (selectedCharacterId()) {
+          <!-- Character Detail -->
+          @if (characterDetail.isLoading()) {
+          <div class="stack-item flex items-center justify-center py-8" animate.enter="fade-in" animate.leave="fade-out">
+            <nyct-spinner size="md" />
+          </div>
+          } @else if (characterDetail.value(); as profile) {
+          <div class="stack-item" animate.enter="slide-in-right" animate.leave="slide-out-left">
+            <nyct-character-detail [profile]="profile" [showBack]="true" (back)="clearSelection()" />
+          </div>
+          }
+          } @else if (searchResults.value(); as results) {
+          <!-- Search Results -->
+          @if (results.length > 0) {
+          <div class="stack-item" animate.enter="fade-in" animate.leave="fade-out">
+            <nyct-card-content class="p-0">
+              <nyct-character-results-list [results]="results" (selected)="selectCharacter($event)" />
+            </nyct-card-content>
+          </div>
+          } @else {
+          <div class="stack-item" animate.enter="fade-in" animate.leave="fade-out">
+            <nyct-empty-state
+              icon="search"
+              title="No characters found"
+              description="Try adjusting your search terms."
             />
           </div>
-        </nyct-card-content>
-      </nyct-card>
-
-      <!-- Loading State -->
-      <nyct-card class="mt-2">
-        @if (searchResults.isLoading()) {
-        <div class="flex items-center justify-center py-8">
-          <nyct-spinner size="md" />
+          }
+          }
+            </div>
+          </nyct-card>
         </div>
-        } @else if (selectedCharacterId()) {
-        <!-- Character Detail -->
-        @if (characterDetail.isLoading()) {
-        <nyct-card-content class="flex items-center justify-center py-8">
-          <nyct-spinner size="md" />
-        </nyct-card-content>
-        } @else if (characterDetail.value(); as profile) {
-        <nyct-character-detail [profile]="profile" [showBack]="true" (back)="clearSelection()" />
-        } } @else if (searchResults.value(); as results) {
-        <!-- Search Results -->
-        @if (results.length > 0) {
-        <nyct-card-content class="p-0">
-          <nyct-character-results-list [results]="results" (selected)="selectCharacter($event)" />
-        </nyct-card-content>
-        } @else {
-        <nyct-empty-state
-          icon="search"
-          title="No characters found"
-          description="Try adjusting your search terms."
-        />
-        } }
-      </nyct-card>
+        }
+      </div>
     </div>
   `,
 })
 export class CharacterSearch {
   private charactersService = inject(CharactersService);
+  private elementRef = inject(ElementRef);
+
+  // Dropdown open state
+  dropdownOpen = signal(true);
 
   // Selected character ID for detail view
   selectedCharacterId = signal<string | null>(null);
@@ -134,5 +162,15 @@ export class CharacterSearch {
 
   clearSelection(): void {
     this.selectedCharacterId.set(null);
+  }
+
+  openDropdown(): void {
+    this.dropdownOpen.set(true);
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.dropdownOpen.set(false);
+    }
   }
 }

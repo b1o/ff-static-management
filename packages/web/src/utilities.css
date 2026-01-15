@@ -1,0 +1,12 @@
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Grid stack for overlapping animated content */
+.content-stack {
+  display: grid;
+}
+
+.stack-item {
+  grid-area: 1 / 1;
+}

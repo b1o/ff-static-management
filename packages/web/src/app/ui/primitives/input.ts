@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, model, output } from '@angular/core';
 import type { FormValueControl, ValidationError } from '@angular/forms/signals';
 import { cn } from '../../utils/utils';
 
@@ -53,6 +53,7 @@ let inputIdCounter = 0;
         [value]="value()"
         (input)="onInput($event)"
         (blur)="touched.set(true)"
+        (focus)="focus.emit($event)"
       />
       @if (invalid() && errors().length > 0 && touched()) {
         <div [id]="errorId" class="mt-1 text-sm text-pastel-rose" role="alert">
@@ -95,6 +96,9 @@ export class InputComponent implements FormValueControl<string> {
   required = input<boolean>(false);
   minLength = input<number | undefined>(undefined);
   maxLength = input<number | undefined>(undefined);
+
+  // Events
+  focus = output<FocusEvent>();
 
   protected classes = computed(() => {
     const effectiveVariant = this.invalid() ? 'error' : this.variant();
