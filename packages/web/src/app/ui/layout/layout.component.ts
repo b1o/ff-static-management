@@ -1,21 +1,28 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SidebarComponent } from '../sidebar/sidebar.component';
+import { HlmSidebarImports } from '@spartan/sidebar';
+import { AppSidebarComponent } from './app-sidebar.component';
 import { ImpersonationBannerComponent } from '../impersonation-banner/impersonation-banner';
+import { AuthService } from 'src/app/core/auth/auth.service';
 
 @Component({
   selector: 'nyct-layout',
-  imports: [RouterOutlet, SidebarComponent, ImpersonationBannerComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterOutlet, HlmSidebarImports, AppSidebarComponent, ImpersonationBannerComponent],
   template: `
-    <div class="flex flex-col h-full">
-      <nyct-impersonation-banner />
-      <div class="flex flex-1 overflow-hidden">
-        <nyct-sidebar />
-        <main class="flex-1 overflow-auto p-6">
+    <div hlmSidebarWrapper>
+      <nyct-app-sidebar />
+      <main hlmSidebarInset class="flex flex-col">
+        @if (auth.isImpersonating()) {
+          <nyct-impersonation-banner />
+        }
+        <div class="flex-1 overflow-auto p-6">
           <router-outlet />
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   `,
 })
-export class LayoutComponent {}
+export class LayoutComponent {
+  auth = inject(AuthService);
+}

@@ -1,36 +1,42 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { AdminStore } from '../../features/admin/admin.store';
-import { IconComponent } from '../primitives';
 import { HlmButtonImports } from '@spartan/button';
+import { HlmAlertImports } from '@spartan/alert';
+import { HlmBadgeImports } from '@spartan/badge';
+import { HlmIconImports } from '@spartan/icon';
+import { provideIcons } from '@ng-icons/core';
+import { lucideTriangleAlert, lucideX } from '@ng-icons/lucide';
 
 @Component({
   selector: 'nyct-impersonation-banner',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmButtonImports, IconComponent],
+  providers: [provideIcons({ lucideTriangleAlert, lucideX })],
+  imports: [HlmButtonImports, HlmAlertImports, HlmBadgeImports, HlmIconImports],
   template: `
-    @if (auth.isImpersonating()) {
-      <div class="bg-pastel-peach/20 border-b border-pastel-peach/30 px-4 py-2">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-          <div class="flex items-center gap-2 text-pastel-peach">
-            <nyct-icon name="warning" size="sm" />
-            <span class="text-sm font-medium">
-              Impersonating: {{ auth.user()?.displayName }}
-            </span>
-          </div>
-          <button
-            hlmBtn
-            variant="ghost"
-            size="sm"
-            class="text-pastel-peach hover:text-pastel-peach/80"
-            (click)="exitImpersonation()"
-          >
-            <nyct-icon name="x" size="sm" />
-            Exit Impersonation
-          </button>
-        </div>
+    <div
+      hlmAlert
+      variant="destructive"
+      class="rounded-none items-center border-x-0 border-t-0 flex max-h-xs flex-row relative"
+    >
+      <ng-icon hlm hlmAlertIcon name="lucideTriangleAlert" />
+      <h4 hlmAlertTitle class="flex items-center gap-2">
+        <span hlmBadge variant="destructive">Impersonating</span>
+        <span>{{ auth.user()?.displayName }}</span>
+      </h4>
+      <div hlmAlertDesc class="flex items-center justify-between">
+        <span class="text-xs">You are viewing the app as this user.</span>
+        <button
+          class="absolute top-5 right-5 text-destructive"
+          variant="ghost"
+          hlmBtn
+          size="icon-xs"
+          (click)="exitImpersonation()"
+        >
+          <ng-icon hlm name="lucideX" size="sm" />
+        </button>
       </div>
-    }
+    </div>
   `,
 })
 export class ImpersonationBannerComponent {
