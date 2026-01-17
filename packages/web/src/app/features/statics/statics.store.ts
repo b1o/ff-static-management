@@ -13,7 +13,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/auth/auth.service';
 
 interface StaticsState {
-  statics: (Static & { inviteLinks?: InviteCode[] })[];
+  statics: (StaticWithMembers & { inviteLinks?: InviteCode[] })[];
   selectedStatic: StaticWithMembers | null;
   loading: boolean;
   error: string | null;
@@ -65,10 +65,10 @@ export const StaticsStore = signalStore(
         patchState(store, { loading: true, error: null });
         const result = await staticsService.getMyStatics();
 
-        if (result.success) {
-          patchState(store, { statics: result.data, loading: false });
-        } else {
+        if ('error' in result) {
           patchState(store, { error: result.error, loading: false });
+        } else {
+          patchState(store, { statics: result, loading: false });
         }
       },
 
@@ -155,7 +155,7 @@ export const StaticsStore = signalStore(
         const result = await staticsService.updateMemberPermissions(
           staticData.id,
           userId,
-          canManage
+          canManage,
         );
 
         if (result.success) {
@@ -164,7 +164,7 @@ export const StaticsStore = signalStore(
             selectedStatic: {
               ...staticData,
               members: staticData.members.map((m) =>
-                m.userId === userId ? { ...m, canManage } : m
+                m.userId === userId ? { ...m, canManage } : m,
               ),
             },
             loading: false,
@@ -179,7 +179,7 @@ export const StaticsStore = signalStore(
 
       async generateInviteLink(
         expiresAt: Date | null = null,
-        maxUses: number | null = null
+        maxUses: number | null = null,
       ): Promise<{ inviteCode: string; inviteLink: string } | null> {
         const staticData = store.selectedStatic();
         if (!staticData) return null;
@@ -205,12 +205,12 @@ export const StaticsStore = signalStore(
       clearSelectedStatic() {
         patchState(store, { selectedStatic: null });
       },
-    })
+    }),
   ),
   withHooks({
     onInit: (store) => {
       // Automatically load statics when the store is initialized
       store.loadMyStatics();
     },
-  })
+  }),
 );

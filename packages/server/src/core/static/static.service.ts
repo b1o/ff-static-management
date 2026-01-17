@@ -86,7 +86,15 @@ export abstract class StaticService {
 			.findMany({
 				where: (sm, { eq }) => eq(sm.userId, userId),
 				with: {
-					static: true,
+					static: {
+						with: {
+							members: {
+								with: {
+									user: true,
+								}
+							}
+						}
+					},
 				},
 			})
 			.then((results) => results.map((r) => r.static));

@@ -45,7 +45,7 @@ export class AppSidebarComponent {
         label: 'Statics',
         icon: 'lucideFolder',
         route: '/statics',
-        children: [...this.buildStaticsChildren(), { label: 'Create New', route: '/statics/new' }],
+        children: [...this.buildStaticsChildren()],
       },
       {
         label: 'Characters',

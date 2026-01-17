@@ -18,8 +18,8 @@ export const discordDefaultAvatarUrl = (discriminator: string, size = 128) => {
 export const getUserAvatarUrl = (
   discordId: string,
   avatar: string | null,
-  discriminator: string,
-  size = 128
+  discriminator: string = '5',
+  size = 128,
 ) => {
   if (avatar) {
     return discordAvatarUrl(discordId, avatar, size);

@@ -11,12 +11,12 @@ export class StaticsService {
   private api = inject(API);
 
   /** Get all statics for the current user */
-  async getMyStatics(): Promise<ApiResult<Static[]>> {
+  async getMyStatics() {
     const result = await apiCall(() => this.api.statics['my-statics'].get());
     if (result.success) {
-      return { success: true, data: result.data.statics.filter((s) => s !== null) as Static[] };
+      return result.data.statics
     }
-    return result;
+    return {error: result.error};
   }
 
   /** Get a single static by ID with members */

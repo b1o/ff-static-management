@@ -1,23 +1,42 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { StaticsStore } from '../../features/statics/statics.store';
-import { IconComponent, AlertComponent } from '../../ui/primitives';
 import { HlmButtonImports } from '@spartan/button';
 import { HlmCardImports } from '@spartan/card';
-import { EmptyStateComponent } from '../../ui/empty-state/empty-state.component';
-import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overlay.component';
+import { HlmItemImports } from '@spartan/item';
+import { HlmIconImports } from '@spartan/icon';
+import { provideIcons } from '@ng-icons/core';
+import { lucideSquareArrowOutUpRight, lucideTrash } from '@ng-icons/lucide';
+import { User } from '@ff-static/api/schema';
+import { StaticWithMembers } from '@ff-static/api/types';
+import { HlmAvatarImports } from '@spartan/avatar';
+import { discordAvatarUrl, getUserAvatarUrl } from 'src/app/utils/utils';
+import { HlmHoverCardImports } from '@spartan/hover-card';
+import { BrnHoverCardImports } from '@spartan-ng/brain/hover-card';
+import { DatePipe } from '@angular/common';
+import { BrnDialogService } from '@spartan-ng/brain/dialog';
+import { StaticsCreatePage } from './statics-create.page';
+import { HlmDialogService } from '@spartan/dialog';
 
 @Component({
   selector: 'nyct-statics-list-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    provideIcons({
+      lucideTrash,
+      lucideSquareArrowOutUpRight,
+    }),
+  ],
   imports: [
     RouterLink,
     HlmButtonImports,
     HlmCardImports,
-    IconComponent,
-    AlertComponent,
-    EmptyStateComponent,
-    LoadingOverlayComponent,
+    HlmItemImports,
+    HlmIconImports,
+    BrnHoverCardImports,
+    HlmHoverCardImports,
+    HlmAvatarImports,
+    DatePipe,
   ],
   template: `
     <div class="p-6 max-w-4xl mx-auto">
@@ -25,75 +44,80 @@ import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overla
       <div class="flex items-center justify-between mb-6">
         <div>
           <h1 class="text-2xl font-semibold text-text-primary">My Statics</h1>
-          <p class="mt-1 text-sm text-text-secondary">
-            Manage your static groups and team members
-          </p>
+          <p class="mt-1 text-sm text-text-secondary">Manage your static groups and team members</p>
         </div>
-        <a hlmBtn routerLink="/statics/new">
-          <nyct-icon name="plus" size="sm" />
-          Create Static
-        </a>
+        <button hlmBtn (click)="openCreateStatic()">Create Static</button>
       </div>
 
-      <!-- Error alert -->
-      @if (store.error()) {
-        <nyct-alert variant="error" class="mb-6" [title]="'Error'">
-          {{ store.error() }}
-        </nyct-alert>
-      }
-
       <!-- Content area -->
-      <div class="relative min-h-[200px]">
-        <nyct-loading-overlay [loading]="store.loading()" message="Loading statics..." />
-
+      <div class="relative min-h-50">
         @if (!store.loading()) {
           @if (store.hasStatics()) {
             <!-- Statics list -->
             <div class="grid gap-4">
               @for (static of store.statics(); track static.id) {
-                <a
-                  [routerLink]="['/statics', static.id]"
-                  class="block group"
+                <div
+                  hlmItem
+                  variant="outline"
+                  class="justify-between"
+                  routerLink="/statics/{{ static.id }}"
                 >
-                  <section hlmCard class="transition-colors hover:border-primary-500/50">
-                    <div hlmCardContent class="p-4">
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                          <div class="p-2 rounded-lg bg-primary-500/10">
-                            <nyct-icon name="folder" size="md" class="text-primary-400" />
-                          </div>
-                          <div>
-                            <h3 class="font-medium text-text-primary group-hover:text-primary-400 transition-colors">
-                              {{ static.name }}
-                            </h3>
-                            <p class="text-sm text-text-muted">
-                              Created {{ formatDate(static.createdAt) }}
-                            </p>
-                          </div>
-                        </div>
-                        <nyct-icon
-                          name="chevron-right"
-                          size="sm"
-                          class="text-text-muted group-hover:text-text-secondary transition-colors"
-                        />
-                      </div>
+                  <div hlmItemContent>
+                    <h3 class="text-lg font-medium text-text-primary">{{ static.name }}</h3>
+                    <p class="text-sm text-text-secondary">
+                      Created on {{ formatDate(static.createdAt) }}
+                    </p>
+                  </div>
+
+                  <div hlmItemMedia>
+                    <div class="flex -space-x-2">
+                      @for (member of static.members; track $index) {
+                        <brn-hover-card>
+                          <hlm-avatar
+                            brnHoverCardTrigger
+                            showDelay="100"
+                            hideDelay="10"
+                            class="hover:z-10 hover:scale-150 transition-all"
+                          >
+                            <img
+                              hlmAvatarImage
+                              [src]="discordAvatar(member.user)"
+                              [alt]="static.name"
+                            />
+                            <span hlmAvatarFallback>{{ member.user.displayName.charAt(0) }}</span>
+                          </hlm-avatar>
+                          <hlm-hover-card-content *brnHoverCardContent class="w-50">
+                            <div class="flex items-center justify-center flex-col">
+                              <p class="text-sm text-text-secondary">@{{ member.user.username }}</p>
+                              <span class="text-muted-foreground text-xs">{{
+                                member.joinedAt | date: 'MMMM yyyy'
+                              }}</span>
+                            </div>
+                          </hlm-hover-card-content>
+                        </brn-hover-card>
+                      }
                     </div>
-                  </section>
-                </a>
+                  </div>
+
+                  <div hlmItemActions>
+                    <button hlmBtn variant="outline" class="text-destructive" size="icon-sm">
+                      <ng-icon hlm name="lucideTrash" size="sm" />
+                    </button>
+                    <button
+                      routerLink="/statics/{{ static.id }}"
+                      hlmBtn
+                      variant="outline"
+                      class="text-primary"
+                      size="icon-sm"
+                    >
+                      <ng-icon hlm name="lucideSquareArrowOutUpRight" size="sm" />
+                    </button>
+                  </div>
+                </div>
               }
             </div>
           } @else {
             <!-- Empty state -->
-            <nyct-empty-state
-              icon="folder"
-              title="No statics yet"
-              description="Create your first static to start managing your team."
-            >
-              <a hlmBtn routerLink="/statics/new">
-                <nyct-icon name="plus" size="sm" />
-                Create Static
-              </a>
-            </nyct-empty-state>
           }
         }
       </div>
@@ -102,9 +126,40 @@ import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overla
 })
 export class StaticsListPage implements OnInit {
   protected store = inject(StaticsStore);
+  private dialogService = inject(HlmDialogService);
 
-  ngOnInit() {
-    this.store.loadMyStatics();
+  ngOnInit() {}
+
+  getUsersFromStatic(s: StaticWithMembers) {
+    return s.members?.map((member) => member.user) || [];
+  }
+
+  discordAvatar(user: User) {
+    if (user.avatar) {
+      return discordAvatarUrl(user.discordId, user.avatar);
+    }
+    return '';
+  }
+
+  getMembersAvatarUrls(s: StaticWithMembers): (string | undefined)[] {
+    return (
+      s.members?.map((member) => {
+        const a = getUserAvatarUrl(member.user.discordId, member.user.avatar, '550');
+        console.log('avatar url', a);
+        return a;
+      }) || []
+    );
+  }
+  openCreateStatic() {
+    const ref = this.dialogService.open(StaticsCreatePage, {
+      contentClass: `sm:!max-w=[750px] min-w-[600px]`,
+    });
+
+    ref.closed$.subscribe((result) => {
+      if (result === 'created') {
+        this.store.loadMyStatics();
+      }
+    });
   }
 
   formatDate(date: string | Date): string {

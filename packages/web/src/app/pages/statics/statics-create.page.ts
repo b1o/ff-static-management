@@ -9,6 +9,8 @@ import { lucideCheck, lucideChevronDown } from '@ng-icons/lucide';
 import { HlmLabelImports } from '@spartan/label';
 import { HlmInputImports } from '@spartan/input';
 import { HlmButtonImports } from '@spartan/button';
+import { HlmDialogImports } from '@spartan/dialog';
+import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 
 interface StaticCreateModel {
   name: string;
@@ -16,44 +18,53 @@ interface StaticCreateModel {
 
 @Component({
   selector: 'nyct-statics-create-page',
-  imports: [HlmCardImports, HlmLabelImports, HlmInputImports, HlmButtonImports, Field],
-  providers: [provideIcons({ lucideCheck, lucideChevronDown })],
+  imports: [
+    HlmCardImports,
+    HlmLabelImports,
+    HlmInputImports,
+    HlmButtonImports,
+    Field,
+    HlmDialogImports,
+  ],
   host: {
-    class: 'contents',
+    class: 'flex flex-col gap-4',
   },
+  providers: [provideIcons({ lucideCheck, lucideChevronDown })],
   template: `
-    <section class="w-full max-w-sm" hlmCard>
-      <div hlmCardHeader>
-        <h3 hlmCardTitle>Create Static</h3>
+    <hlm-dialog-header>Create Static</hlm-dialog-header>
+    <div class="flex flex-col gap-6">
+      <div class="grid gap-2">
+        <input
+          type="text"
+          id="name"
+          placeholder="Static Name"
+          [field]="staticCreateForm.name"
+          hlmInput
+        />
       </div>
-
-      <div hlmCardContent>
-        <form>
-          <div class="flex flex-col gap-6">
-            <div class="grid gap-2">
-              <label hlmLabel for="name">Static Name</label>
-              <input
-                type="text"
-                id="name"
-                placeholder="Static Name"
-                [field]="staticCreateForm.name"
-                hlmInput
-              />
-            </div>
-          </div>
-        </form>
-      </div>
-
-      <div hlmCardFooter class="flex justify-end gap-2">
-        <button type="button" hlmBtn (click)="goBack()">Cancel</button>
-        <button hlmBtn class="bg-primary" (click)="createStatic()" variant="outline" type="submit">Create</button>
-      </div>
-    </section>
+    </div>
+    <hlm-dialog-footer>
+      <button type="button" variant="destructive" size="sm" hlmBtn (click)="goBack()">
+        Cancel
+      </button>
+      <button
+        hlmBtn
+        class="bg-primary"
+        (click)="createStatic()"
+        size="sm"
+        variant="outline"
+        type="submit"
+      >
+        Create
+      </button>
+    </hlm-dialog-footer>
   `,
 })
 export class StaticsCreatePage {
   protected store = inject(StaticsStore);
   private router = inject(Router);
+  private readonly dialogRef = inject<BrnDialogRef<any>>(BrnDialogRef);
+  private readonly dialogContext = injectBrnDialogContext<{}>();
 
   protected staticCreateModel = signal<StaticCreateModel>({
     name: '',
@@ -64,8 +75,13 @@ export class StaticsCreatePage {
     minLength(model.name, 3, { message: 'Static name must be at least 3 characters' });
   });
 
-  createStatic() {
+  async createStatic() {
     console.log('Creating static with name:', this.staticCreateForm.name());
+    const res = await this.store.createStatic(this.staticCreateForm.name().value());
+    this.dialogRef.close(res);
+    if (res) {
+      this.router.navigate(['/statics', res.id]);
+    }
   }
 
   goBack() {
