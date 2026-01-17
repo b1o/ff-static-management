@@ -4,13 +4,14 @@ import { UserInfoComponent } from '../user-info/user-info.component';
 import { NavItem } from '../nav.types';
 import { AuthService } from '../../core/auth/auth.service';
 import { getUserAvatarUrl } from '../../utils/utils';
-import { ButtonComponent, IconButtonComponent, IconComponent } from '../primitives';
+import { IconComponent } from '../primitives';
+import { HlmButtonImports } from '@spartan/button';
 import { StaticsStore } from '../../features/statics/statics.store';
 import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'nyct-sidebar',
-  imports: [NavTreeComponent, UserInfoComponent, ButtonComponent, IconButtonComponent],
+  imports: [NavTreeComponent, UserInfoComponent, HlmButtonImports, IconComponent],
   template: `
     <aside
       class="flex flex-col h-full bg-surface border-r border-border transition-all duration-200"
@@ -26,7 +27,7 @@ import { ThemeService } from '../../core/services/theme.service';
       >
         <nyct-user-info [info]="userInfo()" [collapsed]="collapsed()" />
         @if (!collapsed()) {
-        <nyct-button variant="ghost" size="sm" (click)="auth.logout()">Logout</nyct-button>
+        <button hlmBtn variant="ghost" size="sm" (click)="auth.logout()">Logout</button>
         }
       </div>
 
@@ -47,13 +48,15 @@ import { ThemeService } from '../../core/services/theme.service';
         [class.gap-1]="collapsed()"
         [class.justify-between]="!collapsed()"
       >
-        <nyct-icon-button
-          [icon]="collapsed() ? 'chevron-right' : 'chevron-left'"
+        <button
+          hlmBtn
           variant="ghost"
-          [size]="collapsed() ? 'sm' : 'md'"
-          [ariaLabel]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+          [size]="collapsed() ? 'icon-sm' : 'icon'"
+          [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
           (click)="collapsed.set(!collapsed())"
-        />
+        >
+          <nyct-icon [name]="collapsed() ? 'chevron-right' : 'chevron-left'" [size]="collapsed() ? 'sm' : 'md'" />
+        </button>
       </div>
     </aside>
   `,

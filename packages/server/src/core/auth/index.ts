@@ -8,7 +8,7 @@ const DISCORD_USER_INFO_URL = "https://discord.com/api/users/@me";
 const publicAuthRoutes = new Elysia({ prefix: "/auth" })
 	.get(
 		"/discord",
-		async ({ cookie: { oauth_state }, redirect }) => {
+		async function initiateDiscordAuth({ cookie: { oauth_state }, redirect }) {
 			const { url, state } = AuthService.createDiscordAuthorizationURL();
 
 			oauth_state.value = state;
@@ -23,7 +23,7 @@ const publicAuthRoutes = new Elysia({ prefix: "/auth" })
 	)
 	.get(
 		"/discord/callback",
-		async ({ query, cookie: { oauth_state, auth_session }, set, redirect }) => {
+		async function handleDiscordCallback({ query, cookie: { oauth_state, auth_session }, set, redirect }) {
 			const { code, state } = query;
 			const storedState = oauth_state.value;
 
@@ -52,18 +52,20 @@ const protectedAuthRoutes = new Elysia({ prefix: "/auth" })
 	.use(requireAuth)
 	.get(
 		"/me",
-		({ user, cookie: { admin_session } }) => ({
-			user: {
-				id: user.id,
-				discordId: user.discordId,
-				username: user.username,
-				displayName: user.displayName,
-				avatar: user.avatar,
-				isAdmin: user.isAdmin,
-				createdAt: user.createdAt,
-			},
-			isImpersonating: !!admin_session.value,
-		}),
+		function getCurrentUser({ user, cookie: { admin_session } }) {
+			return {
+				user: {
+					id: user.id,
+					discordId: user.discordId,
+					username: user.username,
+					displayName: user.displayName,
+					avatar: user.avatar,
+					isAdmin: user.isAdmin,
+					createdAt: user.createdAt,
+				},
+				isImpersonating: !!admin_session.value,
+			};
+		},
 		{
 			cookie: adminSessionCookieSchema,
 			detail: { tags: ["Auth"], summary: "Get Current Authenticated User" },
@@ -71,7 +73,7 @@ const protectedAuthRoutes = new Elysia({ prefix: "/auth" })
 	)
 	.post(
 		"/logout",
-		async ({ cookie: { auth_session }, session }) => {
+		async function logout({ cookie: { auth_session }, session }) {
 			const blankCookie = await AuthService.logout(session.id);
 
 			auth_session.value = blankCookie.value;

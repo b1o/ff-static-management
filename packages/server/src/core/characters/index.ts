@@ -8,7 +8,7 @@ const characterRoutes = new Elysia({ prefix: "/characters" })
 	.use(requireAuth)
 	.get(
 		"/search",
-		async ({ query: { name, world } }) => {
+		async function searchCharacters({ query: { name, world } }) {
 			const results = await lodestone.searchCharacters({ characterName: name, world });
 			return { results };
 		},
@@ -21,7 +21,7 @@ const characterRoutes = new Elysia({ prefix: "/characters" })
 	)
 	.get(
 		"/:id",
-		async ({ params: { id } }) => {
+		async function getCharacterById({ params: { id } }) {
 			const character = await lodestone.getCharacter(id);
 			return { character };
 		},

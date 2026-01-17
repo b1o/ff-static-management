@@ -14,7 +14,7 @@ const staticsRoutes = new Elysia({ prefix: "/statics" })
 	.use(requireAuth)
 	.post(
 		"/create",
-		async ({ body, user }) => {
+		async function createStatic({ body, user }) {
 			const newStatic = await StaticService.create(body.name, user.id);
 			return { static: newStatic };
 		},
@@ -25,7 +25,7 @@ const staticsRoutes = new Elysia({ prefix: "/statics" })
 	)
 	.get(
 		"/my-statics",
-		async ({ user }) => {
+		async function getMyStatics({ user }) {
 			const statics = await StaticService.getUsersStatics(user.id);
 			return { statics };
 		},
@@ -33,7 +33,7 @@ const staticsRoutes = new Elysia({ prefix: "/statics" })
 	)
 	.get(
 		"/invite/:code",
-		async ({ params, user, redirect }) => {
+		async function consumeInvite({ params, user, redirect }) {
 			const { staticMember } = await StaticService.consumeInviteCode(params.code, user.id);
 			return redirect(`${process.env.FRONTEND_URL}/statics/${staticMember.staticId}`);
 		},
@@ -48,7 +48,7 @@ const staticsLeaderRoutes = new Elysia({ prefix: "/statics/:staticId" })
 	.use(requireStaticLeader)
 	.delete(
 		"/",
-		async ({ params }) => {
+		async function deleteStatic({ params }) {
 			await StaticService.deleteStatic(params.staticId);
 			return { success: true };
 		},
@@ -60,7 +60,7 @@ const staticMemberRoutes = new Elysia({ prefix: "/statics/:staticId" })
 	.use(requireStaticMember)
 	.get(
 		"/",
-		async ({ params }) => {
+		async function getStaticById({ params }) {
 			const staticData = await StaticService.findByIdWithMembers(params.staticId);
 			return { static: staticData };
 		},
@@ -68,7 +68,7 @@ const staticMemberRoutes = new Elysia({ prefix: "/statics/:staticId" })
 	)
 	.get(
 		"/members",
-		async ({ params }) => {
+		async function getStaticMembers({ params }) {
 			const staticData = await StaticService.findByIdWithMembers(params.staticId);
 			return { members: staticData?.members ?? [] };
 		},
@@ -80,7 +80,7 @@ const staticManagerRoutes = new Elysia({ prefix: "/statics/:staticId" })
 	.use(requireStaticManager)
 	.get(
 		"/invites",
-		async ({ params }) => {
+		async function getStaticInvites({ params }) {
 			const invites = await StaticService.getStaticInvites(params.staticId);
 			return { invites };
 		},
@@ -88,7 +88,7 @@ const staticManagerRoutes = new Elysia({ prefix: "/statics/:staticId" })
 	)
 	.post(
 		"/invite",
-		async ({ params, user, body }) => {
+		async function createInvite({ params, user, body }) {
 			const inviteCode = await StaticService.generateInviteCode({
 				staticId: params.staticId,
 				expiresAt: body.expiresAt,
@@ -104,7 +104,7 @@ const staticManagerRoutes = new Elysia({ prefix: "/statics/:staticId" })
 	)
 	.delete(
 		"/invite/:code",
-		async ({ params }) => {
+		async function deleteInvite({ params }) {
 			await StaticService.deleteInvite(params.staticId, params.code);
 			return { success: true };
 		},
@@ -112,7 +112,7 @@ const staticManagerRoutes = new Elysia({ prefix: "/statics/:staticId" })
 	)
 	.patch(
 		"/members/role",
-		async ({ params, body }) => {
+		async function updateMemberRole({ params, body }) {
 			const updatedMember = await StaticService.setMemberPermissions(
 				params.staticId,
 				body.userId,
@@ -127,7 +127,7 @@ const staticManagerRoutes = new Elysia({ prefix: "/statics/:staticId" })
 	)
 	.delete(
 		"/members/:userId",
-		async ({ params }) => {
+		async function removeMember({ params }) {
 			await StaticService.removeMember(params.staticId, params.userId);
 			return { success: true };
 		},

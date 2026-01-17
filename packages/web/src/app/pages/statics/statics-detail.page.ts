@@ -13,14 +13,12 @@ import { StaticsStore } from '../../features/statics/statics.store';
 import { DialogService } from '../../ui/dialog';
 import { AuthService } from '../../core/auth/auth.service';
 import {
-  ButtonComponent,
-  CardComponent,
-  CardHeaderComponent,
-  CardContentComponent,
   IconComponent,
   AlertComponent,
   BadgeComponent,
 } from '../../ui/primitives';
+import { HlmButtonImports } from '@spartan/button';
+import { HlmCardImports } from '@spartan/card';
 import { IfLeaderDirective, IfCanManageDirective } from '../../utils/permission.directive';
 import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overlay.component';
 import { EmptyStateComponent } from '../../ui/empty-state/empty-state.component';
@@ -36,10 +34,8 @@ type MemberWithUser = StaticMember & { user: User };
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
-    ButtonComponent,
-    CardComponent,
-    CardHeaderComponent,
-    CardContentComponent,
+    HlmButtonImports,
+    HlmCardImports,
     IconComponent,
     AlertComponent,
     BadgeComponent,
@@ -72,8 +68,8 @@ type MemberWithUser = StaticMember & { user: User };
 
         @if (!store.loading() && store.selectedStatic(); as static) {
         <!-- Static Header -->
-        <nyct-card class="mb-6">
-          <nyct-card-content class="p-6">
+        <section hlmCard class="mb-6">
+          <div hlmCardContent class="p-6">
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-4">
                 <div class="p-3 rounded-xl bg-primary-500/10">
@@ -90,27 +86,28 @@ type MemberWithUser = StaticMember & { user: User };
               </div>
 
               <div class="controls flex items-center gap-3">
-                <nyct-button
+                <button
                   *nyctIfCanManage
+                  hlmBtn
                   variant="secondary"
                   size="sm"
                   (click)="handleInvite()"
                 >
                   Invite
-                </nyct-button>
+                </button>
 
-                <nyct-button *nyctIfLeader variant="danger" size="sm" (click)="handleDelete()">
+                <button *nyctIfLeader hlmBtn variant="destructive" size="sm" (click)="handleDelete()">
                   <nyct-icon name="trash" size="sm" />
                   Delete
-                </nyct-button>
+                </button>
               </div>
             </div>
-          </nyct-card-content>
-        </nyct-card>
+          </div>
+        </section>
 
         <!-- Members Section -->
-        <nyct-card>
-          <nyct-card-header>
+        <section hlmCard>
+          <div hlmCardHeader>
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-lg font-semibold text-text-primary">Members</h2>
@@ -121,9 +118,9 @@ type MemberWithUser = StaticMember & { user: User };
                 </p>
               </div>
             </div>
-          </nyct-card-header>
+          </div>
 
-          <nyct-card-content class="p-0">
+          <div hlmCardContent class="p-0">
             @if (membersWithUsers().length > 0) {
             <ul class="divide-y divide-border">
               @for (member of membersWithUsers(); track member.id) {
@@ -200,15 +197,15 @@ type MemberWithUser = StaticMember & { user: User };
               description="This static doesn't have any members yet."
             />
             }
-          </nyct-card-content>
-        </nyct-card>
+          </div>
+        </section>
         } @if (!store.loading() && !store.selectedStatic() && !store.error()) {
         <nyct-empty-state
           icon="folder"
           title="Static not found"
           description="The requested static could not be found."
         >
-          <nyct-button routerLink="/statics"> Go to Statics </nyct-button>
+          <a hlmBtn routerLink="/statics"> Go to Statics </a>
         </nyct-empty-state>
         }
       </div>

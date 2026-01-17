@@ -9,6 +9,7 @@ export interface HlmAutocompleteConfig<T, V = T> {
 	requireSelection: boolean;
 	showClearBtn: boolean;
 	debounceTime: number;
+	showToggleButton: boolean;
 }
 
 function getDefaultConfig<T, V = T>(): HlmAutocompleteConfig<T, V> {
@@ -18,6 +19,7 @@ function getDefaultConfig<T, V = T>(): HlmAutocompleteConfig<T, V> {
 		transformOptionToValue: undefined,
 		requireSelection: false,
 		showClearBtn: false,
+		showToggleButton: true,
 		debounceTime: 150,
 	};
 }

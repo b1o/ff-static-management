@@ -9,11 +9,11 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DialogRef, DIALOG_DATA, DialogContentComponent } from '../../ui/dialog';
 import {
-  ButtonComponent,
   IconComponent,
-  InputComponent,
   BadgeComponent,
 } from '../../ui/primitives';
+import { HlmButtonImports } from '@spartan/button';
+import { HlmInputImports } from '@spartan/input';
 import { StaticsService } from '../../features/statics/statics.service';
 import { ToastService } from '../../core/services/toast.service';
 import type { InviteCode } from '@ff-static/api/types';
@@ -45,9 +45,9 @@ type DialogView = 'list' | 'create' | 'result';
   imports: [
     FormsModule,
     DialogContentComponent,
-    ButtonComponent,
+    HlmButtonImports,
+    HlmInputImports,
     IconComponent,
-    InputComponent,
     BadgeComponent,
   ],
   template: `
@@ -91,22 +91,24 @@ type DialogView = 'list' | 'create' | 'result';
               } @else {
               <nyct-badge variant="success" size="sm">Active</nyct-badge>
               }
-              <nyct-button
-                size="sm"
-                variant="icon"
+              <button
+                hlmBtn
+                size="icon-sm"
+                variant="ghost"
                 (click)="deleteInvite(invite)"
                 title="Delete invite"
               >
                 <nyct-icon name="trash" size="sm" />
-              </nyct-button>
-              <nyct-button
-                size="sm"
-                variant="icon"
+              </button>
+              <button
+                hlmBtn
+                size="icon-sm"
+                variant="ghost"
                 title="Copy link"
                 (click)="copyInviteLink(invite)"
               >
                 <nyct-icon name="copy" size="sm" />
-              </nyct-button>
+              </button>
             </div>
           </div>
           <div class="mt-2 flex items-center gap-4 text-xs text-text-muted">
@@ -121,11 +123,11 @@ type DialogView = 'list' | 'create' | 'result';
       }
 
       <div class="flex justify-end gap-3 pt-4 border-t border-border">
-        <nyct-button variant="secondary" size="sm" (click)="close()"> Close </nyct-button>
-        <nyct-button variant="primary" size="sm" (click)="showCreateView()">
+        <button hlmBtn variant="secondary" size="sm" (click)="close()"> Close </button>
+        <button hlmBtn size="sm" (click)="showCreateView()">
           <nyct-icon name="plus" size="sm" class="mr-1" />
           Create New
-        </nyct-button>
+        </button>
       </div>
       } @case ('create') {
       <!-- Create New Invite Form -->
@@ -161,25 +163,26 @@ type DialogView = 'list' | 'create' | 'result';
             Maximum Uses
             <span class="text-text-muted font-normal">(optional)</span>
           </label>
-          <nyct-input
+          <input
+            hlmInput
             id="max-uses"
             type="number"
             placeholder="Unlimited"
-            [(value)]="maxUsesInput"
+            [(ngModel)]="maxUsesInput"
           />
         </div>
       </div>
 
       <div class="flex justify-end gap-3 pt-6">
-        <nyct-button variant="secondary" size="sm" (click)="showListView()"> Back </nyct-button>
-        <nyct-button
-          variant="primary"
+        <button hlmBtn variant="secondary" size="sm" (click)="showListView()"> Back </button>
+        <button
+          hlmBtn
           size="sm"
           [disabled]="generating()"
           (click)="generateInvite()"
         >
           @if (generating()) { Generating... } @else { Generate Link }
-        </nyct-button>
+        </button>
       </div>
       } @case ('result') {
       <!-- Generated Invite Result -->
@@ -204,14 +207,15 @@ type DialogView = 'list' | 'create' | 'result';
             [value]="generatedInvite()?.inviteLink"
             class="flex-1 h-10 px-4 text-sm rounded-lg bg-surface border border-border text-text-primary font-mono"
           />
-          <nyct-button
+          <button
+            hlmBtn
             variant="secondary"
             size="sm"
             [title]="copied() ? 'Copied!' : 'Copy to clipboard'"
             (click)="copyGeneratedLink()"
           >
             <nyct-icon [name]="copied() ? 'check' : 'copy'" size="sm" />
-          </nyct-button>
+          </button>
         </div>
       </div>
 
@@ -226,10 +230,10 @@ type DialogView = 'list' | 'create' | 'result';
       }
 
       <div class="flex justify-end gap-3 pt-6">
-        <nyct-button variant="secondary" size="sm" (click)="createAnother()">
+        <button hlmBtn variant="secondary" size="sm" (click)="createAnother()">
           Create Another
-        </nyct-button>
-        <nyct-button variant="primary" size="sm" (click)="close()"> Done </nyct-button>
+        </button>
+        <button hlmBtn size="sm" (click)="close()"> Done </button>
       </div>
       } }
     </nyct-dialog-content>

@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { StaticsStore } from '../../features/statics/statics.store';
-import { ButtonComponent, CardComponent, CardContentComponent, IconComponent, AlertComponent } from '../../ui/primitives';
+import { IconComponent, AlertComponent } from '../../ui/primitives';
+import { HlmButtonImports } from '@spartan/button';
+import { HlmCardImports } from '@spartan/card';
 import { EmptyStateComponent } from '../../ui/empty-state/empty-state.component';
 import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overlay.component';
 
@@ -10,9 +12,8 @@ import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overla
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
-    ButtonComponent,
-    CardComponent,
-    CardContentComponent,
+    HlmButtonImports,
+    HlmCardImports,
     IconComponent,
     AlertComponent,
     EmptyStateComponent,
@@ -28,10 +29,10 @@ import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overla
             Manage your static groups and team members
           </p>
         </div>
-        <nyct-button routerLink="/statics/new">
+        <a hlmBtn routerLink="/statics/new">
           <nyct-icon name="plus" size="sm" />
           Create Static
-        </nyct-button>
+        </a>
       </div>
 
       <!-- Error alert -->
@@ -54,8 +55,8 @@ import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overla
                   [routerLink]="['/statics', static.id]"
                   class="block group"
                 >
-                  <nyct-card class="transition-colors hover:border-primary-500/50">
-                    <nyct-card-content class="p-4">
+                  <section hlmCard class="transition-colors hover:border-primary-500/50">
+                    <div hlmCardContent class="p-4">
                       <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                           <div class="p-2 rounded-lg bg-primary-500/10">
@@ -76,8 +77,8 @@ import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overla
                           class="text-text-muted group-hover:text-text-secondary transition-colors"
                         />
                       </div>
-                    </nyct-card-content>
-                  </nyct-card>
+                    </div>
+                  </section>
                 </a>
               }
             </div>
@@ -88,10 +89,10 @@ import { LoadingOverlayComponent } from '../../ui/loading-overlay/loading-overla
               title="No statics yet"
               description="Create your first static to start managing your team."
             >
-              <nyct-button routerLink="/statics/new">
+              <a hlmBtn routerLink="/statics/new">
                 <nyct-icon name="plus" size="sm" />
                 Create Static
-              </nyct-button>
+              </a>
             </nyct-empty-state>
           }
         }

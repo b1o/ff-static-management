@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { AdminStore } from '../../features/admin/admin.store';
-import { ButtonComponent, IconComponent } from '../primitives';
+import { IconComponent } from '../primitives';
+import { HlmButtonImports } from '@spartan/button';
 
 @Component({
   selector: 'nyct-impersonation-banner',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonComponent, IconComponent],
+  imports: [HlmButtonImports, IconComponent],
   template: `
     @if (auth.isImpersonating()) {
       <div class="bg-pastel-peach/20 border-b border-pastel-peach/30 px-4 py-2">
@@ -17,7 +18,8 @@ import { ButtonComponent, IconComponent } from '../primitives';
               Impersonating: {{ auth.user()?.displayName }}
             </span>
           </div>
-          <nyct-button
+          <button
+            hlmBtn
             variant="ghost"
             size="sm"
             class="text-pastel-peach hover:text-pastel-peach/80"
@@ -25,7 +27,7 @@ import { ButtonComponent, IconComponent } from '../primitives';
           >
             <nyct-icon name="x" size="sm" />
             Exit Impersonation
-          </nyct-button>
+          </button>
         </div>
       </div>
     }

@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { AuthService } from '../../core/auth/auth.service';
-import { ButtonComponent, IconComponent } from '../../ui/primitives';
+import { IconComponent } from '../../ui/primitives';
+import { HlmButtonImports } from '@spartan/button';
 
 @Component({
   selector: 'nyct-login',
   templateUrl: './login.page.html',
-  imports: [ButtonComponent, IconComponent],
+  imports: [HlmButtonImports, IconComponent],
   styles: `
     .animate-slow-spin {
       animation: slow-spin 20s linear infinite;

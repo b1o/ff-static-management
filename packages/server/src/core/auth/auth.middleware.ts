@@ -4,7 +4,7 @@ import { UnauthorizedError } from "../../lib/errors";
 
 export const requireAuth = new Elysia({ name: "requireAuth" })
 	.guard({ cookie: t.Object({ auth_session: t.Optional(t.String()), admin_session: t.Optional(t.String()) }) })
-	.resolve(async ({ cookie }) => {
+	.resolve(async function validateSession({ cookie }) {
 		const sessionId = cookie.auth_session?.value;
 		if (!sessionId) {
 			throw new UnauthorizedError("Authentication required");

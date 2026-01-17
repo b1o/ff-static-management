@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DialogRef } from './dialog-ref';
 import { DIALOG_DATA } from './dialog-tokens';
-import { ButtonComponent, IconComponent } from '../primitives';
+import { IconComponent } from '../primitives';
+import { HlmButtonImports } from '@spartan/button';
 
 /** Configuration for a confirm dialog */
 export interface ConfirmDialogData {
@@ -30,7 +31,7 @@ export interface ConfirmDialogData {
 @Component({
   selector: 'nyct-confirm-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonComponent, IconComponent],
+  imports: [HlmButtonImports, IconComponent],
   template: `
     <div class="bg-surface-elevated rounded-xl border border-border p-6 shadow-xl">
       <!-- Header -->
@@ -55,20 +56,17 @@ export interface ConfirmDialogData {
 
       <!-- Actions -->
       <div class="mt-6 flex justify-end gap-3">
-        <nyct-button
-          variant="secondary"
-          size="sm"
-          (click)="cancel()"
-        >
+        <button hlmBtn variant="secondary" size="sm" (click)="cancel()">
           {{ data.cancelText ?? 'Cancel' }}
-        </nyct-button>
-        <nyct-button
-          [variant]="data.variant === 'danger' ? 'danger' : 'primary'"
+        </button>
+        <button
+          hlmBtn
+          [variant]="data.variant === 'danger' ? 'destructive' : 'default'"
           size="sm"
           (click)="confirm()"
         >
           {{ data.confirmText ?? 'Confirm' }}
-        </nyct-button>
+        </button>
       </div>
     </div>
   `,

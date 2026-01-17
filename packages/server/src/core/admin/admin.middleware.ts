@@ -4,7 +4,7 @@ import { ForbiddenError, UnauthorizedError } from "../../lib/errors";
 
 export const requireAdmin = new Elysia({ name: "requireAdmin" })
 	.guard({ cookie: t.Object({ auth_session: t.Optional(t.String()), admin_session: t.Optional(t.String()) }) })
-	.resolve(async ({ cookie }) => {
+	.resolve(async function validateAdminSession({ cookie }) {
 		const adminSessionId = cookie.admin_session?.value;
 		const authSessionId = cookie.auth_session?.value;
 

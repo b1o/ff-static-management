@@ -2,6 +2,10 @@ import { db } from "../db";
 import { cacheCharacters, type CachedCharacter } from "../db/schema";
 import { eq, and, gt, like, lt } from "drizzle-orm";
 
+const log = (...args: any[]) => {
+	console.log("[Lodestone]", ...args);
+};
+
 export type Region = "eu" | "na" | "jp" | "oc";
 
 export interface LodestoneConfig {
@@ -64,10 +68,12 @@ export class Lodestone {
 		// Check cache first
 		const cached = await this.getCachedSearchResults(characterName, world);
 		if (cached.length > 0) {
-			console.log(`[Lodestone] Cache HIT: search "${characterName}"${world ? ` on ${world}` : ""} (${cached.length} results)`);
+			console.log(
+				`[Lodestone] Cache HIT: search "${characterName}"${world ? ` on ${world}` : ""} (${cached.length} results)`,
+			);
 			return cached;
 		}
-		console.log(`[Lodestone] Cache MISS: search "${characterName}"${world ? ` on ${world}` : ""}`)
+		console.log(`[Lodestone] Cache MISS: search "${characterName}"${world ? ` on ${world}` : ""}`);
 
 		// Fetch from Lodestone
 		const results = await this.fetchSearchResults(characterName, world);
@@ -196,6 +202,7 @@ export class Lodestone {
 	}
 
 	private async fetchSearchResults(name: string, world?: string): Promise<CharacterSearchResult[]> {
+		const start = process.hrtime();
 		const params = new URLSearchParams({ q: name });
 		if (world) {
 			params.set("worldname", world);
@@ -209,6 +216,10 @@ export class Lodestone {
 		}
 
 		const html = await response.text();
+		const elapsed = process.hrtime(start);
+		log(
+			`Fetched search results for "${name}"${world ? ` on ${world}` : ""} in ${elapsed[0]}s ${Math.round(elapsed[1] / 1e6)}ms`,
+		);
 		return this.parseSearchResults(html);
 	}
 
@@ -229,6 +240,7 @@ export class Lodestone {
 	}
 
 	private parseSearchResults(html: string): CharacterSearchResult[] {
+		const start = process.hrtime();
 		const results: CharacterSearchResult[] = [];
 
 		// Match character entries: <div class="entry"><a href="/lodestone/character/ID/" class="entry__link">...</a></div>
@@ -260,6 +272,8 @@ export class Lodestone {
 				results.push({ lodestoneId, name, world, dc, avatar });
 			}
 		}
+		const elapsed = process.hrtime(start);
+		log(`Parsed ${results.length} search results in ${elapsed[0]}s ${Math.round(elapsed[1] / 1e6)}ms`);
 
 		return results;
 	}
@@ -291,7 +305,7 @@ export class Lodestone {
 
 		// Race/Clan/Gender: <p class="character-block__name">Race<br />Clan / Gender</p>
 		const raceBlockMatch = html.match(
-			/<p class="character-block__title">Race\/Clan\/Gender<\/p>\s*<p class="character-block__name">([^<]+)<br\s*\/?>\s*([^/]+)\s*\/\s*([^<]+)<\/p>/
+			/<p class="character-block__title">Race\/Clan\/Gender<\/p>\s*<p class="character-block__name">([^<]+)<br\s*\/?>\s*([^/]+)\s*\/\s*([^<]+)<\/p>/,
 		);
 		const race = raceBlockMatch?.[1]?.trim();
 		const clan = raceBlockMatch?.[2]?.trim();
@@ -299,31 +313,31 @@ export class Lodestone {
 
 		// Nameday
 		const namedayMatch = html.match(
-			/<p class="character-block__title">Nameday<\/p>\s*<p class="character-block__birth">([^<]+)<\/p>/
+			/<p class="character-block__title">Nameday<\/p>\s*<p class="character-block__birth">([^<]+)<\/p>/,
 		);
 		const nameday = namedayMatch?.[1]?.trim();
 
 		// Guardian
 		const guardianMatch = html.match(
-			/<p class="character-block__title">Guardian<\/p>\s*<p class="character-block__name">([^<]+)<\/p>/
+			/<p class="character-block__title">Guardian<\/p>\s*<p class="character-block__name">([^<]+)<\/p>/,
 		);
 		const guardian = guardianMatch?.[1]?.trim();
 
 		// City-state
 		const cityMatch = html.match(
-			/<p class="character-block__title">City-state<\/p>\s*<p class="character-block__name">([^<]+)<\/p>/
+			/<p class="character-block__title">City-state<\/p>\s*<p class="character-block__name">([^<]+)<\/p>/,
 		);
 		const cityState = cityMatch?.[1]?.trim();
 
 		// Grand Company
 		const gcMatch = html.match(
-			/<p class="character-block__title">Grand Company<\/p>\s*<p class="character-block__name">([^<]+)<\/p>/
+			/<p class="character-block__title">Grand Company<\/p>\s*<p class="character-block__name">([^<]+)<\/p>/,
 		);
 		const grandCompany = gcMatch?.[1]?.trim();
 
 		// Free Company: <a href="/lodestone/freecompany/..." class="character__freecompany__name">FC Name</a>
 		const fcMatch = html.match(
-			/<a href="\/lodestone\/freecompany\/[^"]+" class="character__freecompany__name[^"]*">([^<]+)<\/a>/
+			/<a href="\/lodestone\/freecompany\/[^"]+" class="character__freecompany__name[^"]*">([^<]+)<\/a>/,
 		);
 		const freeCompany = fcMatch?.[1]?.trim();
 

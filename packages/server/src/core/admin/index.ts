@@ -23,7 +23,7 @@ export const adminRoutes = new Elysia({ prefix: "/admin" })
 	.use(requireAdmin)
 	.get(
 		"/users",
-		async () => {
+		async function getAllUsers() {
 			const users = await AdminService.getAllUsers();
 			return { users };
 		},
@@ -33,7 +33,7 @@ export const adminRoutes = new Elysia({ prefix: "/admin" })
 	)
 	.post(
 		"/impersonate/:userId",
-		async ({ params, user, cookie: { auth_session, admin_session } }) => {
+		async function impersonateUser({ params, user, cookie: { auth_session, admin_session } }) {
 			const { userId } = params;
 
 			// Can't impersonate yourself
@@ -77,7 +77,7 @@ export const adminRoutes = new Elysia({ prefix: "/admin" })
 	)
 	.post(
 		"/unimpersonate",
-		async ({ cookie: { auth_session, admin_session }, session }) => {
+		async function unimpersonateUser({ cookie: { auth_session, admin_session }, session }) {
 			const adminSessionId = admin_session.value;
 
 			if (!adminSessionId) {

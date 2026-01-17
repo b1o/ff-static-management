@@ -2,22 +2,20 @@ import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/cor
 import { AdminStore } from '../admin.store';
 import { AuthService } from '../../../core/auth/auth.service';
 import {
-  ButtonComponent,
-  CardComponent,
-  CardContentComponent,
   IconComponent,
   AlertComponent,
   BadgeComponent,
 } from '../../../ui/primitives';
+import { HlmButtonImports } from '@spartan/button';
+import { HlmCardImports } from '@spartan/card';
 import { LoadingOverlayComponent } from '../../../ui/loading-overlay/loading-overlay.component';
 
 @Component({
   selector: 'nyct-admin-users-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ButtonComponent,
-    CardComponent,
-    CardContentComponent,
+    HlmButtonImports,
+    HlmCardImports,
     IconComponent,
     AlertComponent,
     BadgeComponent,
@@ -45,8 +43,8 @@ import { LoadingOverlayComponent } from '../../../ui/loading-overlay/loading-ove
         <nyct-loading-overlay [loading]="store.loading()" message="Loading users..." />
 
         @if (!store.loading()) {
-          <nyct-card>
-            <nyct-card-content class="p-0">
+          <section hlmCard>
+            <div hlmCardContent class="p-0">
               <table class="w-full">
                 <thead class="bg-surface-elevated border-b border-border">
                   <tr>
@@ -104,14 +102,15 @@ import { LoadingOverlayComponent } from '../../../ui/loading-overlay/loading-ove
                       </td>
                       <td class="px-4 py-3 text-right">
                         @if (user.id !== auth.user()?.id && !auth.isImpersonating()) {
-                          <nyct-button
+                          <button
+                            hlmBtn
                             variant="ghost"
                             size="sm"
                             (click)="impersonate(user.id)"
                           >
                             <nyct-icon name="user" size="sm" />
                             Impersonate
-                          </nyct-button>
+                          </button>
                         } @else if (user.id === auth.user()?.id) {
                           <span class="text-sm text-text-muted">(You)</span>
                         }
@@ -126,8 +125,8 @@ import { LoadingOverlayComponent } from '../../../ui/loading-overlay/loading-ove
                   }
                 </tbody>
               </table>
-            </nyct-card-content>
-          </nyct-card>
+            </div>
+          </section>
         }
       </div>
     </div>

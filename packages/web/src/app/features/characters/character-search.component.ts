@@ -1,176 +1,308 @@
-import { ChangeDetectionStrategy, Component, signal, inject, resource, ElementRef } from '@angular/core';
-import { form, Field, debounce, required, minLength } from '@angular/forms/signals';
-import { ReactiveFormsModule } from '@angular/forms';
-import type { CharacterSearchResult, CharacterProfile } from '@ff-static/api/types';
 import {
-  InputComponent,
-  CardComponent,
-  CardContentComponent,
-  SpinnerComponent,
-} from '../../ui/primitives';
-import { EmptyStateComponent } from '../../ui/empty-state/empty-state.component';
+  ChangeDetectionStrategy,
+  Component,
+  signal,
+  inject,
+  resource,
+  computed,
+  effect,
+} from '@angular/core';
+import type { CharacterSearchResult, CharacterProfile } from '@ff-static/api/types';
+import { HlmInputImports } from '@spartan/input';
+import { HlmLabelImports } from '@spartan/label';
+import { HlmCardImports } from '@spartan/card';
 import { CharactersService } from './characters.service';
-import { CharacterResultsListComponent } from './character-results-list.component';
-import { CharacterDetailComponent } from './character-detail.component';
+import { HlmAutocompleteImports } from '@spartan/autocomplete';
+import { HlmSpinnerImports } from '@spartan/spinner';
+import { HlmAvatarImports } from '@spartan/avatar';
+import { debouncedSignal } from '@spartan-ng/brain/core';
+import { HlmDialogImports } from '@spartan/dialog';
+import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
+import { JsonPipe, NgOptimizedImage } from '@angular/common';
+import { HlmButtonImports } from '@spartan/button';
 
 interface CharacterSearchForm {
   characterName: string;
   world: string;
 }
 
+const ALL_WORLDS = [
+  // Aether
+  'Adamantoise',
+  'Cactuar',
+  'Faerie',
+  'Gilgamesh',
+  'Jenova',
+  'Midgardsormr',
+  'Sargatanas',
+  'Siren',
+  // Crystal
+  'Balmung',
+  'Brynhildr',
+  'Coeurl',
+  'Diabolos',
+  'Goblin',
+  'Malboro',
+  'Mateus',
+  'Zalera',
+  // Primal
+  'Behemoth',
+  'Excalibur',
+  'Exodus',
+  'Famfrit',
+  'Hyperion',
+  'Lamia',
+  'Leviathan',
+  'Ultros',
+  // Dynamis
+  'Halicarnassus',
+  'Maduin',
+  'Marilith',
+  'Seraph',
+  // Elemental (JP)
+  'Aegis',
+  'Atomos',
+  'Carbuncle',
+  'Garuda',
+  'Gungnir',
+  'Kujata',
+  'Tonberry',
+  'Typhon',
+  // Gaia (JP)
+  'Alexander',
+  'Bahamut',
+  'Durandal',
+  'Fenrir',
+  'Ifrit',
+  'Ridill',
+  'Tiamat',
+  'Ultima',
+  // Mana (JP)
+  'Anima',
+  'Asura',
+  'Chocobo',
+  'Hades',
+  'Ixion',
+  'Masamune',
+  'Pandaemonium',
+  'Titan',
+  // Chaos (EU)
+  'Cerberus',
+  'Louisoix',
+  'Moogle',
+  'Omega',
+  'Phantom',
+  'Ragnarok',
+  'Sagittarius',
+  'Spriggan',
+  // Light (EU)
+  'Alpha',
+  'Lich',
+  'Odin',
+  'Phoenix',
+  'Raiden',
+  'Shiva',
+  'Twintania',
+  'Zodiark',
+  // Materia (OC)
+  'Bismarck',
+  'Ravana',
+  'Sephirot',
+  'Sophia',
+  'Zurvan',
+];
+
 @Component({
   selector: 'nyct-character-search',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    '(document:click)': 'onDocumentClick($event)',
-  },
   imports: [
-    ReactiveFormsModule,
-    Field,
-    InputComponent,
-    CardComponent,
-    CardContentComponent,
-    SpinnerComponent,
-    EmptyStateComponent,
-    CharacterResultsListComponent,
-    CharacterDetailComponent,
+    HlmInputImports,
+    HlmLabelImports,
+    HlmCardImports,
+    HlmAutocompleteImports,
+    HlmAvatarImports,
+    HlmSpinnerImports,
+    HlmDialogImports,
+    HlmButtonImports,
   ],
+  host: {
+    class: 'flex flex-col gap-4',
+  },
   template: `
-    <div class="max-w-2xl flex justify-center flex-col mx-auto">
-      <!-- Search Form -->
-      <div class="relative">
-        <nyct-card>
-          <nyct-card-content class="p-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <nyct-input
-                label="Character Name"
-                placeholder="Enter character name..."
-                size="sm"
-                [field]="searchForm.characterName"
-                (focus)="openDropdown()"
-              />
-              <nyct-input
-                label="World"
-                placeholder="Enter world name..."
-                size="sm"
-                [field]="searchForm.world"
-                (focus)="openDropdown()"
-              />
-            </div>
-          </nyct-card-content>
-        </nyct-card>
+    @if (isInDialog()) {
+      <hlm-dialog-header>
+        <h3 hlmDialogTitle>Import Character</h3>
+      </hlm-dialog-header>
+    }
 
-        <!-- Dropdown Results -->
-        @if((searchResults.hasValue() || searchResults.isLoading()) && dropdownOpen()) {
-        <div
-          class="absolute left-0 right-0 z-10 mt-2"
-          animate.enter="dropdown-enter"
-          animate.leave="dropdown-leave"
-        >
-          <nyct-card class="bg-surface/95 backdrop-blur-sm overflow-hidden">
-          <div class="content-stack">
-          @if (searchResults.isLoading()) {
-          <div class="stack-item flex items-center justify-center py-8" animate.enter="fade-in" animate.leave="fade-out">
-            <nyct-spinner size="md" />
+    <form class="flex flex-row gap-2">
+      <hlm-autocomplete
+        [filteredOptions]="characterSearchResults.value()"
+        [(search)]="characterQuery"
+        [(value)]="selectedCharacter"
+        [loading]="characterSearchResults.isLoading()"
+        [transformOptionToString]="characterToString"
+        [optionTemplate]="characterOption"
+        searchPlaceholderText="Search character name..."
+        [displayWith]="characterDisplay"
+        [showToggleButton]="characterSearchResults.value().length > 0"
+        emptyText="No characters found matching your search."
+      >
+        <hlm-spinner loading class="size-6" />
+      </hlm-autocomplete>
+
+      <hlm-autocomplete
+        [(search)]="worldQuery"
+        [(value)]="selectedWorld"
+        [filteredOptions]="filteredWorlds()"
+      >
+        <hlm-spinner loading class="size-6" />
+      </hlm-autocomplete>
+    </form>
+
+    @let selected = characterDetail.value();
+
+    @if (selected) {
+      <div class="selected-character-details grid grid-cols-2 gap-4">
+        @if (selected.portrait) {
+          <div class="character-portrait relative">
+            <img [src]="selected.portrait" width="auto" height="auto" class="rounded-md" />
           </div>
-          } @else if (selectedCharacterId()) {
-          <!-- Character Detail -->
-          @if (characterDetail.isLoading()) {
-          <div class="stack-item flex items-center justify-center py-8" animate.enter="fade-in" animate.leave="fade-out">
-            <nyct-spinner size="md" />
-          </div>
-          } @else if (characterDetail.value(); as profile) {
-          <div class="stack-item" animate.enter="slide-in-right" animate.leave="slide-out-left">
-            <nyct-character-detail [profile]="profile" [showBack]="true" (back)="clearSelection()" />
-          </div>
-          }
-          } @else if (searchResults.value(); as results) {
-          <!-- Search Results -->
-          @if (results.length > 0) {
-          <div class="stack-item" animate.enter="fade-in" animate.leave="fade-out">
-            <nyct-card-content class="p-0">
-              <nyct-character-results-list [results]="results" (selected)="selectCharacter($event)" />
-            </nyct-card-content>
-          </div>
-          } @else {
-          <div class="stack-item" animate.enter="fade-in" animate.leave="fade-out">
-            <nyct-empty-state
-              icon="search"
-              title="No characters found"
-              description="Try adjusting your search terms."
-            />
-          </div>
-          }
-          }
-            </div>
-          </nyct-card>
-        </div>
         }
+
+        <div class="details flex flex-col gap-2">
+          <div>
+            <div class="name font-medium text-lg">{{ selected.name }}</div>
+            @if (selected.title) {
+              <div class="title m-0 text-sm text-muted-foreground">
+                {{ selected.title }}
+              </div>
+            }
+          </div>
+          <div class="world">
+            <span class="text-muted-foreground">World:</span> {{ selected.world }}
+          </div>
+
+          <div class="data-center ">
+            <span class="text-muted-foreground">Data Center:</span> {{ selected.dc }}
+          </div>
+          @if (selected.freeCompany) {
+            <div class="free-company">
+              <span class="text-muted-foreground">Free Company:</span> {{ selected.freeCompany }}
+            </div>
+          }
+          @if (selected.race) {
+            <div class="race">
+              <span class="text-muted-foreground">Race:</span> {{ selected.race }}
+            </div>
+          }
+        </div>
       </div>
-    </div>
+    }
+
+    <hlm-dialog-footer>
+      <button hlmBtn variant="destructive" (click)="closeDialog()">Cancel</button>
+      <button
+        hlmBtn
+        variant="outline"
+        [disabled]="!selectedCharacter()"
+        (click)="characterSelected()"
+      >
+        Import
+      </button>
+    </hlm-dialog-footer>
+
+    <ng-template #characterOption let-option>
+      <div class="flex flex-row items-center gap-2">
+        <hlm-avatar>
+          <img [src]="option.avatar" alt="{{ option.name }}" hlmAvatarImage />
+        </hlm-avatar>
+        <div class="char-info">
+          <div class="font-medium">{{ option.name }}</div>
+          <div class="location text-sm text-muted-foreground">
+            {{ option.world }} - <span class="text-small">{{ option.dc }}</span>
+          </div>
+        </div>
+      </div>
+    </ng-template>
   `,
 })
 export class CharacterSearch {
   private charactersService = inject(CharactersService);
-  private elementRef = inject(ElementRef);
+  private readonly dialogRef = inject<BrnDialogRef<CharacterSearchResult>>(BrnDialogRef);
+  private readonly dialogContext = injectBrnDialogContext<{}>();
 
-  // Dropdown open state
-  dropdownOpen = signal(true);
+  protected isInDialog = computed(() => this.dialogRef !== null);
 
-  // Selected character ID for detail view
-  selectedCharacterId = signal<string | null>(null);
-
-  // Search form
-  searchModel = signal<CharacterSearchForm>({
-    characterName: '',
-    world: '',
+  protected characterName = signal<string>('');
+  protected worldQuery = signal<string>('');
+  protected selectedWorld = signal<string | null>(null);
+  protected filteredWorlds = computed(() => {
+    const query = this.worldQuery().toLowerCase();
+    return ALL_WORLDS.filter((world) => world.toLowerCase().includes(query));
   });
 
-  searchForm = form(this.searchModel, (model) => {
-    debounce(model.characterName, 300);
-    debounce(model.world, 300);
-    required(model.characterName, { message: 'Name is required' });
-    required(model.world, { message: 'World is required' });
-    minLength(model.characterName, 3, { message: 'Name must be at least 3 characters long' });
+  protected characterQuery = signal<string>('');
+  protected debouncedCharacterName = debouncedSignal(this.characterQuery, 500);
+  protected selectedCharacter = signal<CharacterSearchResult | undefined>(undefined);
+  protected characterSearchResults = resource<CharacterSearchResult[], CharacterSearchForm>({
+    defaultValue: [],
+    debugName: 'CharacterSearchResults',
+    params: () => ({
+      characterName: this.debouncedCharacterName() || '',
+      world: this.selectedWorld() || '',
+    }),
+    loader: async ({ params }) => {
+      if (params.characterName.trim().length === 0) {
+        return [];
+      }
+      // Skip search if the query matches the currently selected character's display
+      const selected = this.selectedCharacter();
+      if (selected && this.characterDisplay(selected) === params.characterName) {
+        return [];
+      }
+      return await this.charactersService.searchCharacters(params.characterName, params.world);
+    },
   });
 
-  // Reactive resource for search - only fetches when valid
-  searchResults = resource<CharacterSearchResult[] | undefined, CharacterSearchForm | undefined>({
+  protected characterDetail = resource<CharacterProfile | undefined | null, string>({
     params: () => {
-      const formState = this.searchForm();
-      if (!formState.valid()) return undefined;
-      return formState.value();
+      const selectedCharacter = this.selectedCharacter();
+      if (!selectedCharacter) {
+        return '';
+      }
+      return selectedCharacter.lodestoneId;
     },
-    loader: ({ params }) => {
-      if (!params) return Promise.resolve(undefined);
-      return this.charactersService.searchCharacters(params.characterName, params.world);
-    },
-  });
-
-  // Reactive resource for character detail
-  characterDetail = resource<CharacterProfile | null, string | null>({
-    params: () => this.selectedCharacterId(),
-    loader: ({ params }) => {
-      if (!params) return Promise.resolve(null);
-      return this.charactersService.getCharacter(params);
+    loader: async ({ params }) => {
+      if (params.length === 0) {
+        return undefined;
+      }
+      return await this.charactersService.getCharacter(params);
     },
   });
 
-  selectCharacter(lodestoneId: string): void {
-    this.selectedCharacterId.set(lodestoneId);
+  private test = effect(() => {
+    const detail = this.characterDetail.value();
+    console.log('Character Detail changed:', detail);
+  });
+
+  protected selectionEffect = effect(() => {
+    const character = this.selectedCharacter();
+    console.log('Selected character changed:', character);
+  });
+
+  protected characterToString = (opt: CharacterSearchResult) =>
+    `${opt.name} (${opt.world} - ${opt.dc})`;
+  protected characterDisplay = (opt: CharacterSearchResult) => this.characterToString(opt);
+  protected characterToValue = (opt: CharacterSearchResult) => opt.lodestoneId;
+
+  constructor() {}
+
+  closeDialog() {
+    this.dialogRef.close();
   }
 
-  clearSelection(): void {
-    this.selectedCharacterId.set(null);
-  }
-
-  openDropdown(): void {
-    this.dropdownOpen.set(true);
-  }
-
-  onDocumentClick(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target)) {
-      this.dropdownOpen.set(false);
-    }
+  characterSelected() {
+    this.dialogRef.close(this.selectedCharacter());
   }
 }

@@ -108,17 +108,19 @@ export const HLM_AUTOCOMPLETE_VALUE_ACCESSOR = {
 							</button>
 						}
 
-						<button
-							hlmInputGroupButton
-							type="button"
-							tabindex="-1"
-							[attr.aria-label]="ariaLabelToggleButton()"
-							[disabled]="_disabled()"
-							(click)="_toggleOptions()"
-							size="icon-xs"
-						>
-							<ng-icon name="lucideChevronDown" />
-						</button>
+						@if(showToggleButton()) {
+							<button
+								hlmInputGroupButton
+								type="button"
+								tabindex="-1"
+								[attr.aria-label]="ariaLabelToggleButton()"
+								[disabled]="_disabled()"
+								(click)="_toggleOptions()"
+								size="icon-xs"
+							>
+								<ng-icon name="lucideChevronDown" />
+							</button>
+						}
 					</div>
 				</div>
 
@@ -242,6 +244,10 @@ export class HlmAutocomplete<T, V = T> implements ControlValueAccessor {
 
 	/** Whether to show the clear button when a option is selected. */
 	public readonly showClearBtn = input<boolean, BooleanInput>(this._config.showClearBtn, {
+		transform: booleanAttribute,
+	});
+
+	public readonly showToggleButton = input<boolean, BooleanInput>(this._config.showToggleButton, {
 		transform: booleanAttribute,
 	});
 

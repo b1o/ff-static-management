@@ -7,7 +7,7 @@ import { ForbiddenError } from "../../lib/errors";
 export const requireStaticMember = new Elysia({ name: "requireStaticMember" })
 	.use(requireAuth)
 	.guard({ params: staticIdParams })
-	.resolve(async ({ user, params }) => {
+	.resolve(async function checkStaticMembership({ user, params }) {
 		const staticMember = await StaticService.findMember(params.staticId, user.id);
 		if (!staticMember) {
 			throw new ForbiddenError("Static membership required");
@@ -19,7 +19,7 @@ export const requireStaticMember = new Elysia({ name: "requireStaticMember" })
 export const requireStaticManager = new Elysia({ name: "requireStaticManager" })
 	.use(requireAuth)
 	.guard({ params: staticIdParams })
-	.resolve(async ({ user, params }) => {
+	.resolve(async function checkStaticManager({ user, params }) {
 		const staticMember = await StaticService.findMember(params.staticId, user.id);
 		if (!staticMember) {
 			throw new ForbiddenError("Static membership required");
@@ -34,7 +34,7 @@ export const requireStaticManager = new Elysia({ name: "requireStaticManager" })
 export const requireStaticLeader = new Elysia({ name: "requireStaticLeader" })
 	.use(requireAuth)
 	.guard({ params: staticIdParams })
-	.resolve(async ({ user, params }) => {
+	.resolve(async function checkStaticLeader({ user, params }) {
 		const staticMember = await StaticService.findMember(params.staticId, user.id);
 		if (!staticMember) {
 			throw new ForbiddenError("Static membership required");
